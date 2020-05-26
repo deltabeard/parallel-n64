@@ -16,11 +16,8 @@ LDLIBS := -lpthread -lGL
 
 DYNAFLAGS :=
 COREFLAGS :=
-CPUFLAGS  := -O2 -g1
-
+CPUFLAGS  := -O2 -g1 -Wall
 fpic = -fpic
-
-UNAME=$(shell uname -a)
 
 # Dirs
 ROOT_DIR := .
@@ -67,11 +64,6 @@ endif
 # Fix for GCC 10, make sure its added to all stages of the compiler
 ifeq "$(shell expr `gcc -dumpversion` \>= 10)" "1"
   CPUFLAGS += -fcommon
-endif
-
-# LTO
-ifeq ($(HAVE_LTCG),1)
-  CPUFLAGS += -flto
 endif
 
 ### Finalize ###
