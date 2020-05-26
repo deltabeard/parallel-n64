@@ -1,43 +1,22 @@
 #include "gDP_funcs.h"
 #include "../plugin.h"
 
-/* Sets a scissoring box at the screen coordinates 
+/* Sets a scissoring box at the screen coordinates
  *
  * mode              - Video mode:
  *                     G_SC_NON_INTERLACE  - Draw all scan lines
  *                     G_SC_ODD_INTERLACE  - Draw only odd-numbered scan lines
  *                     G_SC_EVEN_INTERLACE - Draw only even-numbered scan lines
  *
- * ulx               - Screen's left edge coordinates (0.0~1023.75) 
- * uly               - Screen's top edge coordinates (0.0~1023.75) 
- * lrx               - Screen's right edge coordinates (0.0~1023.75) 
- * lry               - Screen's bottom edge coordinates (0.0~1023.75) 
+ * ulx               - Screen's left edge coordinates (0.0~1023.75)
+ * uly               - Screen's top edge coordinates (0.0~1023.75)
+ * lrx               - Screen's right edge coordinates (0.0~1023.75)
+ * lry               - Screen's bottom edge coordinates (0.0~1023.75)
  * */
 void GDPSetScissor(uint32_t mode,
       float ulx, float uly, float lrx, float lry )
 {
-   switch (gfx_plugin)
-   {
-      case GFX_GLIDE64:
-#ifdef HAVE_GLIDE64
-         glide64gDPSetScissor(mode, ulx, uly, lrx, lry);
-#endif
-         break;
-      case GFX_GLN64:
-#if defined(HAVE_GLIDEN64)
-         gln64gDPSetScissor(mode, ulx, uly, lrx, lry);
-#endif
-         break;
-      case GFX_RICE:
-#ifdef HAVE_RICE
-         /* TODO/FIXME */
-#endif
-         break;
-      case GFX_ANGRYLION:
-      case GFX_PARALLEL:
-         /* Stub, no HLE */
-         break;
-   }
+	gln64gDPSetScissor(mode, ulx, uly, lrx, lry);
 }
 
 /*
@@ -55,26 +34,5 @@ void GDPSetScissor(uint32_t mode,
 void GDPLoadBlock(uint32_t tile, uint32_t ul_s, uint32_t ul_t,
       uint32_t lr_s, uint32_t dxt )
 {
-   switch (gfx_plugin)
-   {
-      case GFX_GLIDE64:
-#ifdef HAVE_GLIDE64
-         glide64gDPLoadBlock(tile, ul_s, ul_t, lr_s, dxt);
-#endif
-         break;
-      case GFX_GLN64:
-#ifdef HAVE_GLIDEN64
-         gln64gDPLoadBlock(tile, ul_s, ul_t, lr_s, dxt);
-#endif
-         break;
-      case GFX_RICE:
-#ifdef HAVE_RICE
-         /* TODO/FIXME */
-#endif
-         break;
-      case GFX_ANGRYLION:
-      case GFX_PARALLEL:
-         /* Stub, no HLE */
-         break;
-   }
+	gln64gDPLoadBlock(tile, ul_s, ul_t, lr_s, dxt);
 }

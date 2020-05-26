@@ -26,7 +26,6 @@
 #include "libretro_memory.h"
 
 /* Cxd4 RSP */
-#include "../mupen64plus-rsp-cxd4/config.h"
 #include "plugin/audio_libretro/audio_plugin.h"
 #include "../Graphics/plugin.h"
 
@@ -166,42 +165,10 @@ static void n64DebugCallback(void* aContext, int aLevel, const char* aMessage)
 
 extern m64p_rom_header ROM_HEADER;
 
-static void core_settings_autoselect_gfx_plugin(void)
-{
-   struct retro_variable gfx_var = { "parallel-n64-gfxplugin", 0 };
-
-   environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &gfx_var);
-
-   if (gfx_var.value && strcmp(gfx_var.value, "auto") != 0)
-      return;
-
-#if defined(HAVE_PARALLEL)
-   if (vulkan_inited)
-   {
-      gfx_plugin = GFX_PARALLEL;
-      return;
-   }
-#endif
-
-#if (defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)) && defined(HAVE_GLIDE64)
-   if (gl_inited)
-   {
-      gfx_plugin = GFX_GLIDE64;
-      return;
-   }
-#endif
-
-#ifdef HAVE_THR_AL
-   gfx_plugin = GFX_ANGRYLION;
-#endif
-}
-
 unsigned libretro_get_gfx_plugin(void)
 {
    return gfx_plugin;
 }
-
-static void core_settings_autoselect_rsp_plugin(void);
 
 static void core_settings_set_defaults(void)
 {
@@ -226,59 +193,8 @@ static void core_settings_set_defaults(void)
        else if (gfx_var.value && !strcmp(gfx_var.value, "low"))
           gfx_plugin_accuracy = 0;
    }
-
-   /* Load RSP plugin core option */
-
-   if (rsp_var.value)
-   {
-      if (rsp_var.value && !strcmp(rsp_var.value, "auto"))
-         core_settings_autoselect_rsp_plugin();
-      if (rsp_var.value && !strcmp(rsp_var.value, "hle") && !vulkan_inited)
-         rsp_plugin = RSP_HLE;
-      if (rsp_var.value && !strcmp(rsp_var.value, "cxd4"))
-         rsp_plugin = RSP_CXD4;
-      if (rsp_var.value && !strcmp(rsp_var.value, "parallel"))
-         rsp_plugin = RSP_PARALLEL;
-   }
 }
 
-
-
-static void core_settings_autoselect_rsp_plugin(void)
-{
-   struct retro_variable rsp_var = { "parallel-n64-rspplugin", 0 };
-
-   environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &rsp_var);
-
-   if (rsp_var.value && strcmp(rsp_var.value, "auto") != 0)
-      return;
-
-   rsp_plugin = RSP_HLE;
-
-   if (
-          (!strcmp((const char*)ROM_HEADER.Name, "GAUNTLET LEGENDS"))
-      )
-   {
-      rsp_plugin = RSP_CXD4;
-   }
-
-   if (!strcmp((const char*)ROM_HEADER.Name, "CONKER BFD"))
-      rsp_plugin = RSP_HLE;
-
-   if (vulkan_inited)
-   {
-#if defined(HAVE_PARALLEL_RSP)
-      rsp_plugin = RSP_PARALLEL;
-#else
-      rsp_plugin = RSP_CXD4;
-#endif
-   }
-
-#ifdef HAVE_THR_AL
-   if (gfx_plugin == GFX_ANGRYLION)
-      rsp_plugin = RSP_CXD4;
-#endif
-}
 
 static void setup_variables(void)
 {
@@ -483,7 +399,6 @@ static bool emu_step_load_data()
 
       if (log_cb)
          log_cb(RETRO_LOG_INFO, "EmuThread: M64CMD_DISK_OPEN\n");
-      printf("M64CMD_DISK_OPEN\n");
 
       if(CoreDoCommand(M64CMD_DISK_OPEN, disk_size, (void*)disk_data))
       {
@@ -537,7 +452,6 @@ static bool emu_step_load_data()
 
       if (log_cb)
          log_cb(RETRO_LOG_INFO, "EmuThread: M64CMD_DDROM_OPEN\n");
-      printf("M64CMD_DDROM_OPEN\n");
 
       if(CoreDoCommand(M64CMD_DDROM_OPEN, romlength, (void*)ipl_data))
       {
@@ -576,38 +490,15 @@ extern struct rgba prescale[PRESCALE_WIDTH * PRESCALE_HEIGHT];
 
 bool emu_step_render(void)
 {
-   if (flip_only)
-   {
-      switch (gfx_plugin)
-      {
-         case GFX_ANGRYLION:
-#ifdef HAVE_THR_AL
-            video_cb(prescale, screen_width, screen_height, screen_pitch);
-#endif
-            break;
-
-         case GFX_PARALLEL:
-#if defined(HAVE_PARALLEL)
-            video_cb(parallel_frame_is_valid() ? RETRO_HW_FRAME_BUFFER_VALID : NULL,
-                  parallel_frame_width(), parallel_frame_height(), 0);
-#endif
-            break;
-
-         default:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-            video_cb(RETRO_HW_FRAME_BUFFER_VALID, screen_width, screen_height, 0);
-#else
-            video_cb((screen_pitch == 0) ? NULL : prescale, screen_width, screen_height, screen_pitch);
-#endif
-            break;
-      }
-
-      pushed_frame = true;
-      return true;
-   }
+	if (flip_only)
+	{
+		video_cb(RETRO_HW_FRAME_BUFFER_VALID, screen_width, screen_height, 0);
+		pushed_frame = true;
+		return true;
+	}
 
    if (!pushed_frame && frame_dupe) /* Dupe. Not duping violates libretro API, consider it a speedhack. */
-      video_cb(NULL, screen_width, screen_height, screen_pitch);
+	   video_cb(NULL, screen_width, screen_height, screen_pitch);
 
    return false;
 }
@@ -620,8 +511,6 @@ static void emu_step_initialize(void)
    emu_initialized = true;
 
    core_settings_set_defaults();
-   core_settings_autoselect_gfx_plugin();
-   core_settings_autoselect_rsp_plugin();
 
    plugin_connect_all(gfx_plugin, rsp_plugin);
 
@@ -641,52 +530,7 @@ void reinit_gfx_plugin(void)
 #endif
     }
 
-    switch (gfx_plugin)
-    {
-       case GFX_GLIDE64:
-#ifdef HAVE_GLIDE64
-          glide64InitGfx();
-#endif
-          break;
-       case GFX_GLN64:
-#if defined(HAVE_GLN64) || defined(HAVE_GLIDEN64)
-          gles2n64_reset();
-#endif
-          break;
-       case GFX_RICE:
-#ifdef HAVE_RICE
-          /* TODO/FIXME */
-#endif
-          break;
-       case GFX_ANGRYLION:
-          /* Stub */
-          break;
-       case GFX_PARALLEL:
-#ifdef HAVE_PARALLEL
-          if (!environ_cb(RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE, &vulkan) || !vulkan)
-          {
-             if (log_cb)
-                log_cb(RETRO_LOG_ERROR, "Failed to obtain Vulkan interface.\n");
-          }
-          else
-             parallel_init(vulkan);
-#endif
-          break;
-    }
-}
-
-void deinit_gfx_plugin(void)
-{
-    switch (gfx_plugin)
-    {
-       case GFX_PARALLEL:
-#if defined(HAVE_PARALLEL)
-          parallel_deinit();
-#endif
-          break;
-       default:
-          break;
-    }
+    gles2n64_reset();
 }
 
 #ifdef NO_LIBCO
@@ -824,68 +668,23 @@ unsigned retro_get_region (void)
 #if defined(HAVE_PARALLEL) || defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 static void context_reset(void)
 {
-   switch (gfx_plugin)
-   {
-      case GFX_ANGRYLION:
-      case GFX_PARALLEL:
-         break;
-      default:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-         {
-            static bool first_init = true;
-            printf("context_reset.\n");
-            glsm_ctl(GLSM_CTL_STATE_CONTEXT_RESET, NULL);
+	static bool first_init = true;
+	glsm_ctl(GLSM_CTL_STATE_CONTEXT_RESET, NULL);
 
-            if (first_init)
-            {
-               glsm_ctl(GLSM_CTL_STATE_SETUP, NULL);
-               first_init = false;
-            }
-         }
-#endif
-         break;
-   }
+	if (first_init)
+	{
+		glsm_ctl(GLSM_CTL_STATE_SETUP, NULL);
+		first_init = false;
+	}
 
-   reinit_gfx_plugin();
+	reinit_gfx_plugin();
 }
 
 static void context_destroy(void)
 {
-   deinit_gfx_plugin();
+	return;
 }
 #endif
-
-static bool retro_init_vulkan(void)
-{
-#if defined(HAVE_PARALLEL)
-   hw_render.context_type    = RETRO_HW_CONTEXT_VULKAN;
-   hw_render.version_major   = VK_MAKE_VERSION(1, 0, 12);
-   hw_render.context_reset   = context_reset;
-   hw_render.context_destroy = context_destroy;
-
-   if (!environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &hw_render))
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_ERROR, "mupen64plus: libretro frontend doesn't have Vulkan support.\n");
-      return false;
-   }
-
-   hw_context_negotiation.interface_type = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN;
-   hw_context_negotiation.interface_version = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION;
-   hw_context_negotiation.get_application_info = parallel_get_application_info;
-   hw_context_negotiation.create_device = parallel_create_device;
-   hw_context_negotiation.destroy_device = NULL;
-   if (!environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE, &hw_context_negotiation))
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_ERROR, "mupen64plus: libretro frontend doesn't have context negotiation support.\n");
-   }
-
-   return true;
-#else
-   return false;
-#endif
-}
 
 static bool context_framebuffer_lock(void *data)
 {
@@ -990,34 +789,6 @@ static void gfx_set_filtering(void)
 {
      if (log_cb)
         log_cb(RETRO_LOG_DEBUG, "set filtering mode...\n");
-     switch (gfx_plugin)
-     {
-        case GFX_GLIDE64:
-#ifdef HAVE_GLIDE64
-           glide_set_filtering(retro_filtering);
-#endif
-           break;
-        case GFX_ANGRYLION:
-#ifdef HAVE_THR_AL
-           angrylion_set_filtering(retro_filtering);
-#endif
-           break;
-        case GFX_RICE:
-#ifdef HAVE_RICE
-           /* TODO/FIXME */
-#endif
-           break;
-        case GFX_PARALLEL:
-#ifdef HAVE_PARALLEL
-           /* Stub */
-#endif
-           break;
-        case GFX_GLN64:
-#if defined(HAVE_GLN64) || defined(HAVE_GLIDEN64)
-           /* Stub */
-#endif
-           break;
-     }
 }
 
 unsigned setting_get_dithering(void)
@@ -1029,32 +800,6 @@ static void gfx_set_dithering(void)
 {
    if (log_cb)
       log_cb(RETRO_LOG_DEBUG, "set dithering mode...\n");
-
-   switch (gfx_plugin)
-   {
-      case GFX_GLIDE64:
-#ifdef HAVE_GLIDE64
-         /* Stub */
-#endif
-         break;
-      case GFX_ANGRYLION:
-#ifdef HAVE_THR_AL
-         angrylion_set_dithering(retro_dithering);
-#endif
-         break;
-      case GFX_RICE:
-#ifdef HAVE_RICE
-         /* Stub */
-#endif
-         break;
-      case GFX_PARALLEL:
-         break;
-      case GFX_GLN64:
-#if defined(HAVE_GLN64) || defined(HAVE_GLIDEN64)
-         /* Stub */
-#endif
-         break;
-     }
 }
 
 void update_variables(bool startup)
@@ -1161,35 +906,6 @@ void update_variables(bool startup)
       var.value = NULL;
 
       environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var);
-
-      if (var.value)
-      {
-         if (!strcmp(var.value, "auto"))
-#if defined(HAVE_GLN64) || defined(HAVE_GLIDEN64)
-         if (!strcmp(var.value, "gln64"))
-            gfx_plugin = GFX_GLN64;
-#endif
-#ifdef HAVE_RICE
-         if (!strcmp(var.value, "rice"))
-            gfx_plugin = GFX_RICE;
-#endif
-#ifdef HAVE_GLIDE64
-         if(!strcmp(var.value, "glide64"))
-            gfx_plugin = GFX_GLIDE64;
-#endif
-#ifdef HAVE_THR_AL
-         if(!strcmp(var.value, "angrylion"))
-            gfx_plugin = GFX_ANGRYLION;
-#endif
-#ifdef HAVE_PARALLEL
-         if(!strcmp(var.value, "parallel"))
-            gfx_plugin = GFX_PARALLEL;
-#endif
-      }
-      else
-      {
-         core_settings_autoselect_gfx_plugin();
-      }
    }
 
 
@@ -1297,19 +1013,6 @@ void update_variables(bool startup)
       angrylion_set_overscan(0);
 #endif
 
-
-   CFG_HLE_GFX = 0;
-
-#ifdef HAVE_THR_AL
-   if (gfx_plugin != GFX_ANGRYLION)
-      CFG_HLE_GFX = 1;
-#endif
-
-#ifdef HAVE_PARALLEL
-   if (gfx_plugin != GFX_PARALLEL)
-      CFG_HLE_GFX = 1;
-#endif
-   CFG_HLE_AUD = 0; /* There is no HLE audio code in libretro audio plugin. */
 
    var.key = "parallel-n64-filtering";
    var.value = NULL;
@@ -1546,67 +1249,8 @@ bool retro_load_game(const struct retro_game_info *game)
 
    init_audio_libretro(audio_buffer_size);
 
-#ifdef HAVE_THR_AL
-   if (gfx_plugin != GFX_ANGRYLION)
-#endif
-   {
-      if (gfx_plugin == GFX_PARALLEL)
-      {
-         retro_init_vulkan();
-         vulkan_inited = true;
-      }
-      else
-      {
          retro_init_gl();
          gl_inited = true;
-      }
-   }
-
-   if (vulkan_inited)
-   {
-      switch (gfx_plugin)
-      {
-         case GFX_GLIDE64:
-         case GFX_GLN64:
-         case GFX_RICE:
-            gfx_plugin = GFX_PARALLEL;
-            break;
-         default:
-            break;
-      }
-
-      switch (rsp_plugin)
-      {
-         case RSP_HLE:
-#if defined(HAVE_PARALLEL_RSP)
-            rsp_plugin = RSP_PARALLEL;
-#else
-            rsp_plugin = RSP_CXD4;
-#endif
-            break;
-         default:
-            break;
-      }
-   }
-   else if (gl_inited)
-   {
-      switch (gfx_plugin)
-      {
-         case GFX_PARALLEL:
-            gfx_plugin = GFX_GLIDE64;
-            break;
-         default:
-            break;
-      }
-
-      switch (rsp_plugin)
-      {
-         case RSP_PARALLEL:
-            rsp_plugin = RSP_HLE;
-         default:
-            break;
-      }
-   }
 
    if (is_cartridge_rom(game->data))
    {
@@ -1739,33 +1383,6 @@ void retro_run (void)
          if (aspect_val != last_aspect)
          {
             screen_aspectmodehint = aspectmode;
-
-            switch (gfx_plugin)
-            {
-               case GFX_GLIDE64:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#endif
-                  break;
-               case GFX_RICE:
-#ifdef HAVE_RICE
-                  /* Stub */
-#endif
-                  break;
-               case GFX_GLN64:
-#ifdef HAVE_GLN64
-                  /* Stub */
-#endif
-                  break;
-               case GFX_PARALLEL:
-#ifdef HAVE_PARALLEL
-                  /* Stub */
-#endif
-                  break;
-               case GFX_ANGRYLION:
-                  /* Stub */
-                  break;
-            }
-
             last_aspect = aspect_val;
             reinit_screen = true;
          }
@@ -1795,23 +1412,7 @@ void retro_run (void)
 
    do
    {
-      switch (gfx_plugin)
-      {
-         case GFX_GLIDE64:
-         case GFX_GLN64:
-         case GFX_RICE:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
             glsm_enter();
-#endif
-            break;
-         case GFX_PARALLEL:
-#if defined(HAVE_PARALLEL)
-            parallel_begin_frame();
-#endif
-            break;
-         case GFX_ANGRYLION:
-            break;
-      }
 
       if (first_time)
       {
@@ -1831,19 +1432,7 @@ void retro_run (void)
       co_switch(game_thread);
 #endif
 
-      switch (gfx_plugin)
-      {
-         case GFX_GLIDE64:
-         case GFX_GLN64:
-         case GFX_RICE:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-            glsm_exit();
-#endif
-            break;
-         case GFX_PARALLEL:
-         case GFX_ANGRYLION:
-            break;
-      }
+      glsm_exit();
    } while (emu_step_render());
 }
 

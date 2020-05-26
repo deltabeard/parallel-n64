@@ -8,7 +8,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
- *   This program is distributed in the hope that it will be useful,       * 
+ *   This program is distributed in the hope that it will be useful,       *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
@@ -18,7 +18,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-                       
+
 /* This file contains the Core config functions which will be exported
  * outside of the core library.
  */
@@ -37,13 +37,10 @@
 
 #include "main/util.h"
 
-/* Cxd4 RSP */
-#include "../../../mupen64plus-rsp-cxd4/config.h"
-
 /* TODO/FIXME - put this in some header */
 
 #define GFX_GLIDE64     0
-#define GFX_RICE        1 
+#define GFX_RICE        1
 #define GFX_GLN64       2
 #define GFX_ANGRYLION   3
 #define GFX_PARALLEL    4
@@ -309,7 +306,7 @@ static config_section * section_deepcopy(config_section *orig_section)
             case M64TYPE_BOOL:
                 new_var->val.integer = orig_var->val.integer;
                 break;
-                
+
             case M64TYPE_FLOAT:
                 new_var->val.number = orig_var->val.number;
                 break;
@@ -1015,7 +1012,7 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
    }   libretro_translate[] =
    {
       { "R4300Emulator", "parallel-n64-cpucore", { { 0, "pure_interpreter" }, { 1, "cached_interpreter" }, { 2, "dynamic_recompiler" }, { 3, "neb_dynamic_recompiler" }, { 0, 0 } } },
-      { "ScreenWidth", "parallel-n64-screensize", { 
+      { "ScreenWidth", "parallel-n64-screensize", {
                                                 { 320, "320x200" },
                                                 { 320, "320x240" },
                                                 { 400, "400x256" },
@@ -1038,10 +1035,10 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
                                                 { 1920, "1920x1440" },
                                                 { 2048, "2048x1536" },
                                                 { 2048, "2048x2048" },
-                                                { 0, 0 } 
+                                                { 0, 0 }
                                              }
       },
-      { "ScreenHeight", "parallel-n64-screensize", { 
+      { "ScreenHeight", "parallel-n64-screensize", {
                                                  { 200, "320x200" },
                                                  { 240, "320x240" },
                                                  { 256, "400x256" },
@@ -1064,8 +1061,8 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
                                                  { 1440, "1920x1440" },
                                                  { 1536, "2048x1536" },
                                                  { 2048, "2048x2048" },
-                                                 { 0, 0 } 
-                                              } 
+                                                 { 0, 0 }
+                                              }
       },
       { "DisableExtraMem", "parallel-n64-disable_expmem", {
                                                         { 0, "enabled" },
@@ -1078,7 +1075,7 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
             { 0, "Default" },
             { 1, "64DD IPL" },
          }
-      }, 
+      },
       { 0, 0, { {0, 0} } }
    };
 
@@ -1220,14 +1217,6 @@ EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *
    }
 
 
-   if (!strcmp(ParamName, "DisplayListToGraphicsPlugin"))
-   {
-      return CFG_HLE_GFX;
-   }
-   if (!strcmp(ParamName, "AudioListToAudioPlugin"))
-   {
-      return CFG_HLE_AUD;
-   }
    if (!strcmp(ParamName, "WaitForCPUHost"))
    {
       return false;
