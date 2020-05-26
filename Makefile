@@ -2,9 +2,6 @@ DEBUG=0
 PERF_TEST=0
 HAVE_SHARED_CONTEXT=0
 WITH_CRC=brumme
-HAVE_OPENGL=1
-HAVE_RSP_DUMP=0
-HAVE_RDP_DUMP=0
 HAVE_PARALLEL_RSP=0
 HAVE_LTCG ?= 0
 
@@ -13,15 +10,13 @@ ifneq ($(GIT_VERSION)," unknown")
 	COREFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
 endif
 
-TARGET := parallel-n64_libretro.so
+TARGET := parallel_n64_libretro.so
 SHARED := -shared -Wl,--version-script=libretro/link.T
-LDFLAGS += -lpthread -lGL
+LDLIBS := -lpthread -lGL
 
 DYNAFLAGS :=
-INCFLAGS  :=
 COREFLAGS :=
-CPUFLAGS  := -O2
-GLFLAGS   :=
+CPUFLAGS  := -O2 -g1
 
 fpic = -fpic
 
@@ -37,7 +32,7 @@ ifeq (,$(ARCH))
 endif
 
 # Target Dynarec
-WITH_DYNAREC = $(ARCH)
+WITH_DYNAREC ?= $(ARCH)
 
 ifeq ($(ARCH), $(filter $(ARCH), i386 i686))
    WITH_DYNAREC = x86
@@ -65,10 +60,8 @@ COREFLAGS += -D__LIBRETRO__ -DM64P_PLUGIN_API -DM64P_CORE_PROTOTYPES -D_ENDUSER_
 
 ifneq (,$(findstring msvc,$(platform)))
 CFLAGS += -DINLINE="_inline"
-CXXFLAGS += -DINLINE="_inline"
 else
 CFLAGS += -DINLINE="inline"
-CXXFLAGS += -DINLINE="inline"
 endif
 
 # Fix for GCC 10, make sure its added to all stages of the compiler
@@ -81,16 +74,18 @@ ifeq ($(HAVE_LTCG),1)
   CPUFLAGS += -flto
 endif
 
-ASFLAGS     := $(ASFLAGS) $(CFLAGS) $(CPUFLAGS)
-
 ### Finalize ###
 OBJECTS     += $(SOURCES_CXX:.cpp=.o) $(SOURCES_C:.c=.o) $(SOURCES_ASM:.S=.o)
-CXXFLAGS    += $(CPUOPTS) $(COREFLAGS) $(INCFLAGS) $(INCFLAGS_PLATFORM) $(fpic) $(PLATCFLAGS) $(CPUFLAGS) $(DYNAFLAGS) $(GLFLAGS)
-CFLAGS      += $(CPUOPTS) $(COREFLAGS) $(INCFLAGS) $(INCFLAGS_PLATFORM) $(fpic) $(PLATCFLAGS) $(CPUFLAGS) $(DYNAFLAGS) $(GLFLAGS)
+CFLAGS      += $(COREFLAGS) $(fpic) $(CPUFLAGS) $(DYNAFLAGS)
+CXXFLAGS    += $(CFLAGS)
+ASFLAGS     := $(ASFLAGS) $(CFLAGS) $(CPUFLAGS)
 
 all: $(TARGET)
 $(TARGET): $(OBJECTS)
-	$(CC) $(SHARED) $(CFLAGS) $(LDFLAGS) $(GL_LIB) $(LIBS) -o $@ $(OBJECTS) 
+	$(CC) $(SHARED) $(CFLAGS) $(LDLIBS) -o $@ $^ 
+
+%.o: %.S
+	nasm -f elf64 $< -o$@
 
 clean:
 	$(RM) $(OBJECTS) $(TARGET)

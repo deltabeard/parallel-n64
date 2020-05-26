@@ -1,28 +1,14 @@
 RSPDIR             = $(ROOT_DIR)/mupen64plus-rsp-hle
-CXD4DIR            = $(ROOT_DIR)/mupen64plus-rsp-cxd4
 CORE_DIR           = $(ROOT_DIR)/mupen64plus-core
 LIBRETRO_COMM_DIR  = $(ROOT_DIR)/libretro-common
 LIBRETRO_DIR       = $(ROOT_DIR)/libretro
 AUDIO_LIBRETRO_DIR = $(CORE_DIR)/src/plugin/audio_libretro
-VIDEODIR_RICE      = $(ROOT_DIR)/gles2rice/src
 VIDEODIR_GLN64     = $(ROOT_DIR)/gles2n64/src
-VIDEODIR_ANGRYLION = $(ROOT_DIR)/mupen64plus-video-angrylion
-VIDEODIR_PARALLEL  = $(ROOT_DIR)/mupen64plus-video-paraLLEl
-RSPDIR_PARALLEL    = $(ROOT_DIR)/mupen64plus-rsp-paraLLEl
 VIDEODIR_GLIDE     = $(ROOT_DIR)/glide2gl/src
-VIDEODIR_GLIDEN64  = $(ROOT_DIR)/mupen64plus-video-gliden64
 
-ifeq ($(GLIDEN64),1)
-	HAVE_GLIDEN64 =1
-	HAVE_GLN64    =0
-else
-	HAVE_GLN64    =1
-	HAVE_GLIDEN64 =0
-endif
+CFLAGS += -I$(VIDEODIR_GLIDE)/Glitch64/inc
 
-INCFLAGS += -I$(VIDEODIR_GLIDE)/Glitch64/inc
-
-INCFLAGS += \
+CFLAGS += \
 	-I$(CORE_DIR)/src \
 	-I$(CORE_DIR)/src/api \
 	-I$(ROOT_DIR)/include \
@@ -49,13 +35,6 @@ SOURCES_C += $(RSPDIR)/src/alist.c \
     $(RSPDIR)/src/re2.c \
     $(RSPDIR)/src/hle_plugin.c
 
-SOURCES_C += $(CXD4DIR)/rsp.c
-
-ifeq ($(HAVE_RSP_DUMP), 1)
-SOURCES_CXX += $(CXD4DIR)/rsp_dump.cpp
-CFLAGS   += -DHAVE_RSP_DUMP
-CXXFLAGS += -DHAVE_RSP_DUMP
-endif
 
 # Core
 SOURCES_C += \
@@ -118,9 +97,6 @@ SOURCES_C += \
 	$(CORE_DIR)/src/pi/flashram.c \
 	$(CORE_DIR)/src/pi/cart_rom.c
 
-#	$(CORE_DIR)/src/api/debugger.c \
-#	$(CORE_DIR)/src/main/ini_reader.c \
-
 ifeq ($(PLATFORM_EXT), win32)
 DYNAFLAGS += -DWIN32
 endif
@@ -129,414 +105,145 @@ ifeq ($(PLATFORM_EXT), win64)
 DYNAFLAGS += -DWIN64
 endif
 
-### DYNAREC ###
 ifdef WITH_DYNAREC
 	DYNAFLAGS += -DDYNAREC
-	ifeq ($(WITH_DYNAREC), arm)
-		DYNAFLAGS += -DNEW_DYNAREC=3
-	endif
-
-	ifeq ($(WITH_DYNAREC), aarch64)
-		DYNAFLAGS += -DNEW_DYNAREC=4
-	endif
-
-	ifeq ($(WITH_DYNAREC), x86)
-		DYNAFLAGS += -D_M_IX86
-		CFLAGS += -DARCH_MIN_SSE2 
-		CXXFLAGS += -DARCH_MIN_SSE2
-	endif
-
-	ifeq ($(WITH_DYNAREC), x86_64)
-		DYNAFLAGS += -D_M_X64
-		CFLAGS += -DARCH_MIN_SSE2
-		CXXFLAGS += -DARCH_MIN_SSE2
-
-ifneq (,$(findstring msvc,$(platform)))
-ifeq ($(WITH_DYNAREC), $(filter $(WITH_DYNAREC), x86_64 x64))
-	SOURCES_ASM += $(CORE_DIR)/src/r4300/hacktarux_dynarec/dyna_start_nasm_x64.S
-else ifeq ($(WITH_DYNAREC), $(filter $(WITH_DYNAREC), i386 i686))
-	SOURCES_ASM += $(CORE_DIR)/src/r4300/hacktarux_dynarec/dyna_start_nasm_x86.S
-endif
+ifeq ($(WITH_DYNAREC), arm)
+	DYNAFLAGS += -DNEW_DYNAREC=3
+else ifeq ($(WITH_DYNAREC), aarch64)
+	DYNAFLAGS += -DNEW_DYNAREC=4
+else ifeq ($(WITH_DYNAREC), x86)
+	DYNAFLAGS += -D_M_IX86
+	CFLAGS += -DARCH_MIN_SSE2 
+else ifeq ($(WITH_DYNAREC), x86_64)
+	DYNAFLAGS += -D_M_X64
+	CFLAGS += -DARCH_MIN_SSE2
 endif
 
-#ifneq (,$(findstring msvc,$(platform)))
-#	SOURCES_ASM += $(CORE_DIR)/src/r4300/hacktarux_dynarec/dyna_start.S
+#ifeq ($(WITH_DYNAREC), $(filter $(WITH_DYNAREC), x86_64 x64))
+#	SOURCES_ASM += $(CORE_DIR)/src/r4300/hacktarux_dynarec/dyna_start_nasm_x64.S
+#else ifeq ($(WITH_DYNAREC), $(filter $(WITH_DYNAREC), i386 i686))
+#	SOURCES_ASM += $(CORE_DIR)/src/r4300/hacktarux_dynarec/dyna_start_nasm_x86.S
 #endif
-
-endif
+endif # WITH_DYNAREC
 
 ifeq ($(WITH_DYNAREC), arm)
-		SOURCES_C += $(CORE_DIR)/src/r4300/new_dynarec/new_dynarec.c \
-						 $(CORE_DIR)/src/r4300/new_dynarec/arm/arm_cpu_features.c
+SOURCES_C += $(CORE_DIR)/src/r4300/new_dynarec/new_dynarec.c \
+	     $(CORE_DIR)/src/r4300/new_dynarec/arm/arm_cpu_features.c
 
-		SOURCES_ASM += \
-			$(CORE_DIR)/src/r4300/new_dynarec/arm/linkage_$(WITH_DYNAREC).S
-endif
+SOURCES_ASM += $(CORE_DIR)/src/r4300/new_dynarec/arm/linkage_$(WITH_DYNAREC).S
 
-ifeq ($(WITH_DYNAREC), aarch64)
-		SOURCES_C += $(CORE_DIR)/src/r4300/new_dynarec/new_dynarec_64.c
+else ifeq ($(WITH_DYNAREC), aarch64)
+SOURCES_C += $(CORE_DIR)/src/r4300/new_dynarec/new_dynarec_64.c
+SOURCES_ASM += $(CORE_DIR)/src/r4300/new_dynarec/arm64/linkage_$(WITH_DYNAREC).S
 
-		SOURCES_ASM += \
-			$(CORE_DIR)/src/r4300/new_dynarec/arm64/linkage_$(WITH_DYNAREC).S
-endif
-
-ifeq ($(WITH_DYNAREC), $(filter $(WITH_DYNAREC), i386 i686 x86 x86_64 x64))
-		DYNAFLAGS += -DHAVE_DYNAREC_HACKTARUX
-ifneq ($(NOSSE), 1)
-ifeq (,$(findstring msvc,$(platform)))
-		CPUFLAGS += -msse -msse2
-endif
-endif
-		SOURCES_C += $(CORE_DIR)/src/r4300/hacktarux_dynarec/assemble.c \
-						 $(CORE_DIR)/src/r4300/hacktarux_dynarec/regcache.c \
-						 $(CORE_DIR)/src/r4300/hacktarux_dynarec/hacktarux_dynarec.c
-endif
+else ifeq ($(WITH_DYNAREC), $(filter $(WITH_DYNAREC), i386 i686 x86 x86_64 x64))
+DYNAFLAGS += -DHAVE_DYNAREC_HACKTARUX
+SOURCES_C += $(CORE_DIR)/src/r4300/hacktarux_dynarec/assemble.c \
+	     $(CORE_DIR)/src/r4300/hacktarux_dynarec/regcache.c \
+	     $(CORE_DIR)/src/r4300/hacktarux_dynarec/hacktarux_dynarec.c
 endif
 
 SOURCES_C += $(CORE_DIR)/src/r4300/empty_dynarec.c
 
-ifeq ($(NATIVE_MARCH), 1)
-	CPUFLAGS += -march=native
-endif
-
-### VIDEO PLUGINS ###
-
-# Rice
-
-ifeq ($(HAVE_RICE),1)
-CFLAGS   += -DHAVE_RICE
-CXXFLAGS += -DHAVE_RICE
-SOURCES_CXX += $(VIDEODIR_RICE)/Blender.cpp \
-				$(VIDEODIR_RICE)/gSP_rice.cpp \
-				$(VIDEODIR_RICE)/gDP_rice.cpp \
-            $(VIDEODIR_RICE)/Combiner.cpp \
-            $(VIDEODIR_RICE)/RiceConfig.cpp \
-            $(VIDEODIR_RICE)/ConvertImage16.cpp \
-            $(VIDEODIR_RICE)/ConvertImage.cpp \
-            $(VIDEODIR_RICE)/RiceDebugger.cpp \
-            $(VIDEODIR_RICE)/DecodedMux.cpp \
-            $(VIDEODIR_RICE)/DeviceBuilder.cpp \
-            $(VIDEODIR_RICE)/FrameBuffer.cpp \
-            $(VIDEODIR_RICE)/GraphicsContext.cpp \
-            $(VIDEODIR_RICE)/OGLCombiner.cpp \
-            $(VIDEODIR_RICE)/OGLDecodedMux.cpp \
-            $(VIDEODIR_RICE)/OGLES2FragmentShaders.cpp \
-            $(VIDEODIR_RICE)/OGLExtCombiner.cpp \
-            $(VIDEODIR_RICE)/OGLExtRender.cpp \
-            $(VIDEODIR_RICE)/OGLGraphicsContext.cpp \
-            $(VIDEODIR_RICE)/OGLRender.cpp \
-            $(VIDEODIR_RICE)/OGLRenderExt.cpp \
-            $(VIDEODIR_RICE)/OGLTexture.cpp \
-            $(VIDEODIR_RICE)/RenderBase.cpp \
-            $(VIDEODIR_RICE)/Render.cpp \
-            $(VIDEODIR_RICE)/RenderExt.cpp \
-            $(VIDEODIR_RICE)/RenderTexture.cpp \
-            $(VIDEODIR_RICE)/RSP_Parser.cpp \
-            $(VIDEODIR_RICE)/RSP_S2DEX.cpp \
-            $(VIDEODIR_RICE)/Texture.cpp \
-            $(VIDEODIR_RICE)/TextureManager.cpp \
-            $(VIDEODIR_RICE)/VectorMath.cpp \
-            $(VIDEODIR_RICE)/Video.cpp
-endif
-
 # Libretro
 
-ifeq ($(HAVE_OPENGL),1)
 SOURCES_C += $(LIBRETRO_COMM_DIR)/glsm/glsm.c
-endif
 
 SOURCES_C += $(LIBRETRO_DIR)/libretro.c \
-				 $(CORE_DIR)/src/plugin/emulate_game_controller_via_libretro.c \
-				 $(LIBRETRO_COMM_DIR)/memmap/memalign.c \
-				 $(LIBRETRO_COMM_DIR)/encodings/encoding_crc32.c \
-				 $(AUDIO_LIBRETRO_DIR)/audio_backend_libretro.c \
-
-ifeq ($(STATIC_LINKING),1)
-else
-SOURCES_C += \
-				 $(LIBRETRO_COMM_DIR)/file/config_file.c \
-				 $(LIBRETRO_COMM_DIR)/file/config_file_userdata.c \
-				 $(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
-				 $(LIBRETRO_COMM_DIR)/audio/resampler/audio_resampler.c \
-				 $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/null_resampler.c \
-				 $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler.c \
-				 $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/nearest_resampler.c \
-				 $(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
-				 $(LIBRETRO_COMM_DIR)/compat/compat_snprintf.c \
-				 $(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
-				 $(LIBRETRO_COMM_DIR)/compat/compat_posix_string.c \
-				 $(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c \
-				 $(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
-				 $(LIBRETRO_COMM_DIR)/audio/conversion/float_to_s16.c \
-				 $(LIBRETRO_COMM_DIR)/audio/conversion/s16_to_float.c \
-				 $(LIBRETRO_COMM_DIR)/features/features_cpu.c
-endif
+	     $(CORE_DIR)/src/plugin/emulate_game_controller_via_libretro.c \
+	     $(LIBRETRO_COMM_DIR)/memmap/memalign.c \
+	     $(LIBRETRO_COMM_DIR)/encodings/encoding_crc32.c \
+	     $(AUDIO_LIBRETRO_DIR)/audio_backend_libretro.c \
+	     $(LIBRETRO_COMM_DIR)/file/config_file.c \
+	     $(LIBRETRO_COMM_DIR)/file/config_file_userdata.c \
+	     $(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
+	     $(LIBRETRO_COMM_DIR)/audio/resampler/audio_resampler.c \
+	     $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/null_resampler.c \
+	     $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler.c \
+	     $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/nearest_resampler.c \
+	     $(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
+	     $(LIBRETRO_COMM_DIR)/compat/compat_snprintf.c \
+	     $(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
+	     $(LIBRETRO_COMM_DIR)/compat/compat_posix_string.c \
+	     $(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c \
+	     $(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
+	     $(LIBRETRO_COMM_DIR)/audio/conversion/float_to_s16.c \
+	     $(LIBRETRO_COMM_DIR)/audio/conversion/s16_to_float.c \
+	     $(LIBRETRO_COMM_DIR)/features/features_cpu.c
 
 SOURCES_C += $(LIBRETRO_COMM_DIR)/streams/file_stream.c \
-				 $(LIBRETRO_COMM_DIR)/hash/rhash.c \
-				 $(LIBRETRO_COMM_DIR)/lists/string_list.c \
-				 $(LIBRETRO_COMM_DIR)/string/stdstring.c \
-				 $(LIBRETRO_COMM_DIR)/file/file_path.c
+	     $(LIBRETRO_COMM_DIR)/hash/rhash.c \
+	     $(LIBRETRO_COMM_DIR)/lists/string_list.c \
+	     $(LIBRETRO_COMM_DIR)/string/stdstring.c \
+	     $(LIBRETRO_COMM_DIR)/file/file_path.c
 
-ifeq ($(HAVE_OPENGL),1)
 SOURCES_C += $(LIBRETRO_COMM_DIR)/gfx/gl_capabilities.c
-endif
+SOURCES_C += $(LIBRETRO_DIR)/brumme_crc.c
 
-ifeq ($(WITH_CRC),brumme)
-   SOURCES_C += $(LIBRETRO_DIR)/brumme_crc.c
-else
-   SOURCES_C += $(LIBRETRO_DIR)/libretro_crc.c
-endif
-
-ifeq ($(HAVE_GLIDEN64),1)
-CFLAGS   += -DHAVE_GLIDEN64
-CXXFLAGS += -DHAVE_GLIDEN64
-SOURCES_C     += $(VIDEODIR_GLN64)/3DMath.c
-SOURCES_CXX   += \
-					 $(VIDEODIR_GLIDEN64)/src/mupenplus/CommonAPIImpl_mupenplus.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/mupenplus/Config_mupenplus.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/common/CommonAPIImpl_common.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/FrameBuffer_gliden64.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/FrameBufferInfo.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/DepthBuffer.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/TxFilterStub.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/Combiner_gliden64.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3DEX2CBFD.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3DEX2.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/gln64Config.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/CRC.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3D.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/GBI.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/gDP_gliden64.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/gSP.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/N64.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3DDKR.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3DEX.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3DPD.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3DSWSE.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/F3DWRUS.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/L3D.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/L3DEX.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/L3DEX2.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/S2DEX.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/S2DEX2.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/ZSort.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/OpenGL.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/RDP.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/RSP_gliden64.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/Turbo3D.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/Textures.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/PostProcessor.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/VI.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/ShaderUtils.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/mupenplus/OpenGL_mupenplus.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/MupenPlusPluginAPI.cpp
-
-ifeq ($(GLIDEN64ES),1)
-SOURCES_CXX	 += $(VIDEODIR_GLIDEN64)/src/GLES2/GLSLCombiner_gles2.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/GLES2/UniformSet.cpp
-else
-SOURCES_CXX  += $(VIDEODIR_GLIDEN64)/src/OGL3X/GLSLCombiner_ogl3x.cpp \
-					 $(VIDEODIR_GLIDEN64)/src/OGL3X/UniformBlock.cpp
-endif
-
-SOURCES_CXX +=  $(VIDEODIR_GLIDEN64)/src/CommonPluginAPI.cpp
-endif
-
-ifeq ($(HAVE_GLN64),1)
 CFLAGS   += -DHAVE_GLN64
-CXXFLAGS += -DHAVE_GLN64
 
 SOURCES_C += $(VIDEODIR_GLN64)/3DMath.c \
-            $(VIDEODIR_GLN64)/glN64Config.c \
-				$(VIDEODIR_GLN64)/Combiner_gles2n64.c \
-            $(VIDEODIR_GLN64)/FrameBuffer_gles2n64.c \
-            $(VIDEODIR_GLN64)/Hash.c \
-            $(VIDEODIR_GLN64)/DepthBuffer.c \
-            $(VIDEODIR_GLN64)/F3DEX2CBFD.c \
-            $(VIDEODIR_GLN64)/F3D.c \
-            $(VIDEODIR_GLN64)/F3DDKR.c \
-            $(VIDEODIR_GLN64)/F3DEX2.c \
-            $(VIDEODIR_GLN64)/F3DEX.c \
-            $(VIDEODIR_GLN64)/F3DPD.c \
-            $(VIDEODIR_GLN64)/F3DSWSE.c \
-            $(VIDEODIR_GLN64)/F3DWRUS.c \
-            $(VIDEODIR_GLN64)/GBI.c \
-            $(VIDEODIR_GLN64)/gDP_gles2n64.c \
-            $(VIDEODIR_GLN64)/gles2N64.c \
-            $(VIDEODIR_GLN64)/gSP_gles2n64.c \
-            $(VIDEODIR_GLN64)/L3D.c \
-            $(VIDEODIR_GLN64)/L3DEX2.c \
-            $(VIDEODIR_GLN64)/L3DEX.c \
-            $(VIDEODIR_GLN64)/N64.c \
-            $(VIDEODIR_GLN64)/OpenGL.c \
-            $(VIDEODIR_GLN64)/RDP.c \
-            $(VIDEODIR_GLN64)/gles2n64_rsp.c \
-            $(VIDEODIR_GLN64)/S2DEX2.c \
-            $(VIDEODIR_GLN64)/S2DEX.c \
-            $(VIDEODIR_GLN64)/ShaderCombiner.c \
-            $(VIDEODIR_GLN64)/Textures.c \
-            $(VIDEODIR_GLN64)/Turbo3D.c \
-            $(VIDEODIR_GLN64)/ZSort.c \
-            $(VIDEODIR_GLN64)/VI.c
-endif
+	     $(VIDEODIR_GLN64)/glN64Config.c \
+	     $(VIDEODIR_GLN64)/Combiner_gles2n64.c \
+	     $(VIDEODIR_GLN64)/FrameBuffer_gles2n64.c \
+	     $(VIDEODIR_GLN64)/Hash.c \
+	     $(VIDEODIR_GLN64)/DepthBuffer.c \
+	     $(VIDEODIR_GLN64)/F3DEX2CBFD.c \
+	     $(VIDEODIR_GLN64)/F3D.c \
+	     $(VIDEODIR_GLN64)/F3DDKR.c \
+	     $(VIDEODIR_GLN64)/F3DEX2.c \
+	     $(VIDEODIR_GLN64)/F3DEX.c \
+	     $(VIDEODIR_GLN64)/F3DPD.c \
+	     $(VIDEODIR_GLN64)/F3DSWSE.c \
+	     $(VIDEODIR_GLN64)/F3DWRUS.c \
+	     $(VIDEODIR_GLN64)/GBI.c \
+	     $(VIDEODIR_GLN64)/gDP_gles2n64.c \
+	     $(VIDEODIR_GLN64)/gles2N64.c \
+	     $(VIDEODIR_GLN64)/gSP_gles2n64.c \
+	     $(VIDEODIR_GLN64)/L3D.c \
+	     $(VIDEODIR_GLN64)/L3DEX2.c \
+	     $(VIDEODIR_GLN64)/L3DEX.c \
+	     $(VIDEODIR_GLN64)/N64.c \
+	     $(VIDEODIR_GLN64)/OpenGL.c \
+	     $(VIDEODIR_GLN64)/RDP.c \
+	     $(VIDEODIR_GLN64)/gles2n64_rsp.c \
+	     $(VIDEODIR_GLN64)/S2DEX2.c \
+	     $(VIDEODIR_GLN64)/S2DEX.c \
+	     $(VIDEODIR_GLN64)/ShaderCombiner.c \
+	     $(VIDEODIR_GLN64)/Textures.c \
+	     $(VIDEODIR_GLN64)/Turbo3D.c \
+	     $(VIDEODIR_GLN64)/ZSort.c \
+	     $(VIDEODIR_GLN64)/VI.c
 
 ifeq ($(HAVE_NEON),1)
-	SOURCES_ASM	+= $(LIBRETRO_COMM_DIR)/audio/conversion/float_to_s16_neon.S \
-						$(LIBRETRO_COMM_DIR)/audio/conversion/s16_to_float_neon.S \
-						$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler_neon.S
+	SOURCES_ASM += $(LIBRETRO_COMM_DIR)/audio/conversion/float_to_s16_neon.S \
+		       $(LIBRETRO_COMM_DIR)/audio/conversion/s16_to_float_neon.S \
+		       $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler_neon.S
 endif
 
 
 SOURCES_C   += $(ROOT_DIR)/Graphics/RSP/gSP_funcs_C.c \
-					$(ROOT_DIR)/Graphics/RSP/gSP_state.c \
-				 	$(ROOT_DIR)/Graphics/RDP/gDP_funcs_C.c \
-					$(ROOT_DIR)/Graphics/RDP/gDP_state.c \
-					$(ROOT_DIR)/Graphics/RDP/RDP_state.c \
-					$(ROOT_DIR)/Graphics/RSP/RSP_state.c \
-					$(ROOT_DIR)/Graphics/3dmaths.c \
-					$(ROOT_DIR)/Graphics/HLE/Microcode/Fast3D.c
+	       $(ROOT_DIR)/Graphics/RSP/gSP_state.c \
+	       $(ROOT_DIR)/Graphics/RDP/gDP_funcs_C.c \
+	       $(ROOT_DIR)/Graphics/RDP/gDP_state.c \
+	       $(ROOT_DIR)/Graphics/RDP/RDP_state.c \
+	       $(ROOT_DIR)/Graphics/RSP/RSP_state.c \
+	       $(ROOT_DIR)/Graphics/3dmaths.c \
+	       $(ROOT_DIR)/Graphics/HLE/Microcode/Fast3D.c
+
 SOURCES_CXX += $(ROOT_DIR)/Graphics/RSP/gSP_funcs.cpp \
-				 $(ROOT_DIR)/Graphics/RDP/gDP_funcs.cpp
+		 $(ROOT_DIR)/Graphics/RDP/gDP_funcs.cpp
 
 SOURCES_C += $(ROOT_DIR)/Graphics/plugins.c
 
-ifeq ($(HAVE_GLIDE64),1)
-CFLAGS   += -DHAVE_GLIDE64
-CXXFLAGS += -DHAVE_GLIDE64
-SOURCES_C += $(VIDEODIR_GLIDE)/Glide64/glide64_3dmath.c \
-            $(VIDEODIR_GLIDE)/Glide64/Framebuffer_glide64.c \
-            $(VIDEODIR_GLIDE)/Glide64/Glide64_Ini.c \
-            $(VIDEODIR_GLIDE)/Glide64/glidemain.c \
-            $(VIDEODIR_GLIDE)/Glide64/glide64_util.c \
-				$(VIDEODIR_GLIDE)/Glide64/Glide64_UCode.c \
-            $(VIDEODIR_GLIDE)/Glide64/glide64_gSP.c \
-            $(VIDEODIR_GLIDE)/Glide64/glide64_gDP.c \
-            $(VIDEODIR_GLIDE)/Glide64/Combine.c \
-            $(VIDEODIR_GLIDE)/Glide64/TexCache.c \
-				$(VIDEODIR_GLIDE)/Glide64/MiClWr.c \
-            $(VIDEODIR_GLIDE)/Glide64/TexLoad.c \
-				$(VIDEODIR_GLIDE)/Glide64/glide64_rdp.c
-
-# Glitch64
-SOURCES_C   += $(VIDEODIR_GLIDE)/Glitch64/glitch64_combiner.c \
-            $(VIDEODIR_GLIDE)/Glitch64/geometry.c \
-            $(VIDEODIR_GLIDE)/Glitch64/glitchmain.c \
-            $(VIDEODIR_GLIDE)/Glitch64/glitch64_textures.c
-endif
-
-
-ifeq ($(HAVE_PARALLEL),1)
-CFLAGS   += -DHAVE_PARALLEL
-CXXFLAGS += -DHAVE_PARALLEL
-	SOURCES_CXX += \
-					$(VIDEODIR_PARALLEL)/parallel.cpp \
-					$(VIDEODIR_PARALLEL)/rdp.cpp
-
-	SOURCES_CXX += \
-					$(wildcard $(VIDEODIR_PARALLEL)/parallel-rdp/parallel-rdp/*.cpp)
-
-	SOURCES_CXX += \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/buffer.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/buffer_pool.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/command_buffer.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/command_pool.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/context.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/cookie.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/descriptor_set.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/device.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/event_manager.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/fence.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/fence_manager.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/image.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/memory_allocator.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/pipeline_event.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/query_pool.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/render_pass.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/sampler.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/semaphore.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/semaphore_manager.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/shader.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/texture_format.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan/thread_id.cpp \
-					$(VIDEODIR_PARALLEL)/parallel-rdp/util/aligned_alloc.cpp
-
-	SOURCES_CXX += \
-				   $(VIDEODIR_PARALLEL)/parallel-rdp/spirv-cross/spirv_cross.cpp \
-				   $(VIDEODIR_PARALLEL)/parallel-rdp/spirv-cross/spirv_cfg.cpp \
-				   $(VIDEODIR_PARALLEL)/parallel-rdp/spirv-cross/spirv_parser.cpp \
-				   $(VIDEODIR_PARALLEL)/parallel-rdp/spirv-cross/spirv_cross_parsed_ir.cpp
-
-	SOURCES_C += \
-				 $(VIDEODIR_PARALLEL)/parallel-rdp/volk/volk.c
-
-	INCFLAGS += \
-				-I$(VIDEODIR_PARALLEL)/parallel-rdp/parallel-rdp \
-				-I$(VIDEODIR_PARALLEL)/parallel-rdp/volk \
-				-I$(VIDEODIR_PARALLEL)/parallel-rdp/spirv-cross \
-				-I$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan \
-				-I$(VIDEODIR_PARALLEL)/parallel-rdp/vulkan-headers/include \
-				-I$(VIDEODIR_PARALLEL)/parallel-rdp/util
-
-	CXXFLAGS += -DGRANITE_VULKAN_MT
-
-ifneq ($(findstring Haiku,$(shell uname -s)),)
-	LDFLAGS += -lroot
-else
-	LDFLAGS += -pthread
-	ifneq ($(platform),win)
-		LDFLAGS += -ldl
-	else
-		CFLAGS += -DVK_USE_PLATFORM_WIN32_KHR
-	endif
-endif
-endif
-
-ifeq ($(HAVE_PARALLEL_RSP), 1)
-	PARALLEL_RSP_ARCH := x86_64
-	SOURCES_CXX += $(RSPDIR_PARALLEL)/parallel.cpp \
-				   $(RSPDIR_PARALLEL)/rsp_disasm.cpp \
-				   $(wildcard $(RSPDIR_PARALLEL)/rsp/*.cpp) \
-				   $(wildcard $(RSPDIR_PARALLEL)/arch/$(PARALLEL_RSP_ARCH)/rsp/*.cpp)
-ifneq ($(DEBUG_JIT),)
-	CXXFLAGS += -DDEBUG_JIT
-	SOURCES_CXX += $(RSPDIR_PARALLEL)/debug_jit.cpp \
-				   $(RSPDIR_PARALLEL)/rsp.cpp
-	LDFLAGS += -ldl
-else
-	INCFLAGS += -I$(RSPDIR_PARALLEL)/arch/simd/rsp
-	SOURCES_CXX += $(RSPDIR_PARALLEL)/rsp_jit.cpp \
-						$(RSPDIR_PARALLEL)/arch/simd/rsp/rsp_core.cpp
-	SOURCES_C += \
-				 $(RSPDIR_PARALLEL)/lightning/lib/jit_disasm.c \
-				 $(RSPDIR_PARALLEL)/lightning/lib/jit_memory.c \
-				 $(RSPDIR_PARALLEL)/lightning/lib/jit_names.c \
-				 $(RSPDIR_PARALLEL)/lightning/lib/jit_note.c \
-				 $(RSPDIR_PARALLEL)/lightning/lib/jit_print.c \
-				 $(RSPDIR_PARALLEL)/lightning/lib/jit_size.c \
-				 $(RSPDIR_PARALLEL)/lightning/lib/lightning.c
-
-ifneq (,$(findstring win,$(platform)))
-	SOURCES_C += $(RSPDIR_PARALLEL)/win32/mman/sys/mman.c
-	CFLAGS += -I$(RSPDIR_PARALLEL)/win32/mman
-endif
-endif
-
-	CXXFLAGS += -I$(RSPDIR_PARALLEL)/arch/$(PARALLEL_RSP_ARCH)/rsp -I$(RSPDIR_PARALLEL)/lightning/include
-	CFLAGS += -DHAVE_PARALLEL_RSP -DPARALLEL_INTEGRATION -I$(RSPDIR_PARALLEL)/lightning/include
-	CXXFLAGS += -DHAVE_PARALLEL_RSP -DPARALLEL_INTEGRATION
-endif
-
-ifeq ($(HAVE_OPENGL),1)
 ifeq ($(GLES),1)
-	GLFLAGS += -DHAVE_OPENGLES -DHAVE_OPENGLES2 -DDISABLE_3POINT
+	CFLAGS += -DHAVE_OPENGLES -DHAVE_OPENGLES2 -DDISABLE_3POINT
 	SOURCES_C += $(LIBRETRO_COMM_DIR)/glsym/glsym_es2.c
 else
 	#Texture sampling enhancements.
-	GLFLAGS += -DENABLE_3POINT -DENABLE_TEXTURE_SAMPLING
-
-	GLFLAGS += -DHAVE_OPENGL
+	CFLAGS += -DENABLE_3POINT -DENABLE_TEXTURE_SAMPLING
+	CFLAGS += -DHAVE_OPENGL
 	SOURCES_C += $(LIBRETRO_COMM_DIR)/glsym/glsym_gl.c
 endif
+
 SOURCES_C += $(LIBRETRO_COMM_DIR)/glsym/rglgen.c
-endif
