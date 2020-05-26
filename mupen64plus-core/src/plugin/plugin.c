@@ -269,36 +269,7 @@ static m64p_error plugin_start_rsp(void)
 /* global functions */
 void plugin_connect_all(enum gfx_plugin_type gfx_plugin, enum rsp_plugin_type rsp_plugin)
 {
-   switch (gfx_plugin)
-   {
-      case GFX_ANGRYLION:
-#ifdef HAVE_THR_AL
-         gfx = gfx_angrylion;
-#endif
-         break;
-      case GFX_PARALLEL:
-#ifdef HAVE_PARALLEL
-         gfx = gfx_parallel;
-#endif
-         break;
-      case GFX_RICE:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-         gfx = gfx_rice;
-         break;
-#endif
-      case GFX_GLN64:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-         gfx = gfx_gln64;
-         break;
-#endif
-      default:
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-         gfx = gfx_glide64;
-#elif defined(HAVE_THR_AL)
-         gfx = gfx_angrylion;
-#endif
-         break;
-   }
+	gfx = gfx_gln64;
 
    switch (rsp_plugin)
    {

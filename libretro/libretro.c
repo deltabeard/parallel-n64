@@ -210,33 +210,7 @@ static void core_settings_set_defaults(void)
    struct retro_variable rsp_var = { "parallel-n64-rspplugin", 0 };
    environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &gfx_var);
    environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &rsp_var);
-
-   if (gfx_var.value)
-   {
-      if (gfx_var.value && !strcmp(gfx_var.value, "auto"))
-         core_settings_autoselect_gfx_plugin();
-#if defined(HAVE_GLN64) || defined(HAVE_GLIDEN64)
-      if (gfx_var.value && !strcmp(gfx_var.value, "gln64") && gl_inited)
-         gfx_plugin = GFX_GLN64;
-#endif
-
-#ifdef HAVE_RICE
-      if (gfx_var.value && !strcmp(gfx_var.value, "rice") && gl_inited)
-         gfx_plugin = GFX_RICE;
-#endif
-#ifdef HAVE_GLIDE64
-      if(gfx_var.value && !strcmp(gfx_var.value, "glide64") && gl_inited)
-         gfx_plugin = GFX_GLIDE64;
-#endif
-#ifdef HAVE_THR_AL
-	  if(gfx_var.value && !strcmp(gfx_var.value, "angrylion"))
-         gfx_plugin = GFX_ANGRYLION;
-#endif
-#ifdef HAVE_PARALLEL
-	  if(gfx_var.value && !strcmp(gfx_var.value, "parallel") && vulkan_inited)
-         gfx_plugin = GFX_PARALLEL;
-#endif
-   }
+   gfx_plugin = GFX_GLN64;
 
    gfx_var.key = "parallel-n64-gfxplugin-accuracy";
    gfx_var.value = NULL;
@@ -329,7 +303,7 @@ static void setup_variables(void)
 #ifdef CLASSIC
         "Player 1 Pak; memory|rumble|none"},
 #else
-        "Player 1 Pak; none|memory|rumble"},	
+        "Player 1 Pak; none|memory|rumble"},
 #endif
       {"parallel-n64-pak2",
         "Player 2 Pak; none|memory|rumble"},
@@ -379,7 +353,7 @@ static void setup_variables(void)
 #ifdef CLASSIC
          "Resolution (restart); 320x240|640x480|960x720|1280x960|1440x1080|1600x1200|1920x1440|2240x1680|2880x2160|5760x4320" },
 #else
-         "Resolution (restart); 640x480|960x720|1280x960|1440x1080|1600x1200|1920x1440|2240x1680|2880x2160|5760x4320|320x240" },	
+         "Resolution (restart); 640x480|960x720|1280x960|1440x1080|1600x1200|1920x1440|2240x1680|2880x2160|5760x4320|320x240" },
 #endif
       { "parallel-n64-aspectratiohint",
          "Aspect ratio hint (reinit); normal|widescreen" },
@@ -1011,7 +985,6 @@ extern void  angrylion_set_vi_dedither(unsigned value);
 extern void  angrylion_set_vi_blur(unsigned value);
 
 extern void angrylion_set_synclevel(unsigned value);
-extern void ChangeSize();
 
 static void gfx_set_filtering(void)
 {
@@ -1162,7 +1135,7 @@ void update_variables(bool startup)
        * then we need to drop this. */
       if (
 #ifdef HAVE_THR_AL
-            gfx_plugin == GFX_ANGRYLION || 
+            gfx_plugin == GFX_ANGRYLION ||
 #endif
             sscanf(var.value ? var.value : "640x480", "%dx%d", &screen_width, &screen_height) != 2)
       {
@@ -1219,7 +1192,7 @@ void update_variables(bool startup)
       }
    }
 
-   
+
 #ifdef HAVE_THR_AL
    var.key = "parallel-n64-angrylion-vioverlay";
    var.value = NULL;
@@ -1671,14 +1644,14 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
    {
       if (!info[1].data || info[1].size == 0)
          return false;
-      
+
       disk_size = info[1].size;
       disk_data = malloc(disk_size);
       memcpy(disk_data, info[1].data, disk_size);
 
       return retro_load_game(&info[0]);
    }
- 
+
    return false;
 }
 
@@ -1771,7 +1744,6 @@ void retro_run (void)
             {
                case GFX_GLIDE64:
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-                  ChangeSize();
 #endif
                   break;
                case GFX_RICE:
@@ -2036,7 +2008,6 @@ void retro_cheat_set(unsigned index, bool enabled, const char* codeLine)
 }
 
 
-void vbo_disable(void);
 
 int retro_stop_stepping(void)
 {
@@ -2053,7 +2024,6 @@ int retro_return(bool just_flipping)
       return 0;
 
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-   vbo_disable();
 #endif
 
 #ifdef NO_LIBCO
