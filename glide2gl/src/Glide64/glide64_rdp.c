@@ -1087,7 +1087,7 @@ static void rdp_setscissor(uint32_t w0, uint32_t w1)
 }
 
 #define F3DEX2_SETOTHERMODE(cmd,sft,len,data) { \
-   __RSP.w0 = (cmd<<24) | ((32-(sft)-(len))<<8) | (((len)-1)); \
+   __RSP.w0 = (((uint32_t)cmd)<<24) | ((32-(sft)-(len))<<8) | (((len)-1)); \
    __RSP.w1 = data; \
    gfx_instruction[settings.ucode][cmd](__RSP.w0, __RSP.w1); \
 }
@@ -1103,13 +1103,13 @@ static void rdp_setothermode(uint32_t w0, uint32_t w1)
 
    if ((settings.ucode == ucode_F3DEX2) || (settings.ucode == ucode_CBFD))
    {
-      int cmd0 = __RSP.w0;
+      uint32_t cmd0 = __RSP.w0;
       F3DEX2_SETOTHERMODE(0xE2, 0, 32, __RSP.w1); // SETOTHERMODE_L
       F3DEX2_SETOTHERMODE(0xE3, 0, 32, cmd0 & 0x00FFFFFF); // SETOTHERMODE_H
    }
    else
    {
-      int cmd0 = __RSP.w0;
+      uint32_t cmd0 = __RSP.w0;
       SETOTHERMODE(0xB9, 0, 32, __RSP.w1); // SETOTHERMODE_L
       SETOTHERMODE(0xBA, 0, 32, cmd0 & 0x00FFFFFF); // SETOTHERMODE_H
    }
