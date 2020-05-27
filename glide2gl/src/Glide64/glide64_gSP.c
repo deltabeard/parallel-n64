@@ -10,7 +10,7 @@
 
 int vtx_last = 0;
 
-typedef struct 
+typedef struct
 {
    int16_t y;
    int16_t x;
@@ -52,7 +52,7 @@ void glide64gSPLightVertex(void *data)
    {
       float intensity = DotProduct (rdp.light_vector[i], v->vec);
 
-      if (intensity < 0.0f) 
+      if (intensity < 0.0f)
          intensity = 0.0f;
 
       color[0] += rdp.light[i].col[0] * intensity;
@@ -122,7 +122,7 @@ void load_matrix (float m[4][4], uint32_t addr)
    for (x = 0; x < 16; x += 4)
    {
       for (y=0; y<4; y++)
-         m[x>>2][y] = (float)((((int32_t)src[(addr+x+y)^1]) << 16) | src[(addr+x+y+16)^1]) / 65536.0f;
+         m[x>>2][y] = (float)( (int32_t)(((uint32_t)src[(addr+x+y)^1]) << 16) | src[(addr+x+y+16)^1]) / 65536.0f;
    }
 }
 
@@ -383,7 +383,7 @@ void glide64gSPObjLoadTxtr(uint32_t tx)
             w1 = __RSP.w1           = 0x07000000 | (tsize << 14) | tline;
 
             glide64gDPLoadBlock(
-                  ((w1 >> 24) & 0x07), 
+                  ((w1 >> 24) & 0x07),
                   (w0 >> 14) & 0x3FF, /* ul_s */
                   (w0 >>  2) & 0x3FF, /* ul_t */
                   (w1 >> 14) & 0x3FF, /* lr_s */
@@ -452,7 +452,7 @@ static INLINE void pre_update(void)
 }
 
 /*
- * Loads into the RSP vertex buffer the vertices that will be used by the 
+ * Loads into the RSP vertex buffer the vertices that will be used by the
  * gSP1Triangle commands to generate polygons.
  *
  * v  - Segment address of the vertex list  pointer to a list of vertices.
@@ -708,7 +708,7 @@ bool glide64gSPCullVertices( uint32_t v0, uint32_t vn )
    {
       VERTEX *v = (VERTEX*)&rdp.vtx[i];
 
-      /* Check if completely off the screen 
+      /* Check if completely off the screen
        * (quick frustrum clipping for 90 FOV) */
       if (v->x >= -v->w)
          clip |= X_CLIP_MAX;
@@ -783,7 +783,7 @@ void glide64gSPCIVertex(uint32_t v, uint32_t n, uint32_t v0)
          vert->scr_off |= Z_CLIP_MAX;
 #if 0
       if (vert->z_w > 1.0f)
-         vert->scr_off |= Z_CLIP_MIN; 
+         vert->scr_off |= Z_CLIP_MIN;
 #endif
 
       if (gSP.geometryMode & G_LIGHTING)
@@ -792,9 +792,9 @@ void glide64gSPCIVertex(uint32_t v, uint32_t n, uint32_t v0)
          vert->vec[1] = (int8_t)color[2];
          vert->vec[2] = (int8_t)color[1];
 
-         if (gSP.geometryMode & G_TEXTURE_GEN_LINEAR) 
+         if (gSP.geometryMode & G_TEXTURE_GEN_LINEAR)
             calc_linear(vert);
-         else if (gSP.geometryMode & G_TEXTURE_GEN) 
+         else if (gSP.geometryMode & G_TEXTURE_GEN)
             calc_sphere(vert);
 
          NormalizeVector (vert->vec);
@@ -1066,7 +1066,7 @@ void glide64gSPDMAVertex(uint32_t v, uint32_t n, uint32_t v0)
    // 2 = method #2 of getting count
    // ? = unknown, but used
    // 0 = unused
-   
+
    int prj = gSP.matrix.modelViewi;
 
    for (i = v0; i < n + v0; i++)
@@ -1163,7 +1163,7 @@ void glide64gSPDMATriangles(uint32_t tris, uint32_t n)
          else
          {
             /* agh, backwards culling */
-            rdp.flags |= CULL_BACK;   
+            rdp.flags |= CULL_BACK;
             cull_mode  = GR_CULL_POSITIVE;
          }
       }
@@ -1213,7 +1213,7 @@ void glide64gSPSetDMATexOffset(uint32_t addr)
    gSP.DMAOffsets.tex_count  = 0;
 }
 
-void glide64gSPTexture(int32_t sc, int32_t tc, int32_t level, 
+void glide64gSPTexture(int32_t sc, int32_t tc, int32_t level,
       int32_t tile, int32_t on)
 {
    if (tile == 7 && (settings.hacks&hack_Supercross))
