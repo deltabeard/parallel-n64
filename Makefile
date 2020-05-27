@@ -1,8 +1,6 @@
 DEBUG=0
 PERF_TEST=0
 HAVE_SHARED_CONTEXT=0
-HAVE_GLN64=0
-HAVE_GLIDE64=1
 
 GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
 ifneq ($(GIT_VERSION)," unknown")
@@ -16,12 +14,12 @@ LDLIBS := -lpthread -lGL -lm
 
 DYNAFLAGS :=
 COREFLAGS :=
-CPUFLAGS  := -g3 -Wall -fPIC -flto
+CFLAGS  := -g3 -Wall -fPIC -flto
 
 ifeq ($(DEBUG),1)
-	CPUFLAGS += -Og
+	CFLAGS += -Og
 else
-	CPUFLAGS += -O2 -ffast-math
+	CFLAGS += -O2 -ffast-math
 	TARGETS += $(NAME).sym
 endif
 
@@ -40,6 +38,22 @@ WITH_LIBCO := 1
 ifeq ($(WITH_LIBCO),0)
 	CFLAGS += -DNO_LIBCO
 	WITH_DYNAREC := 0
+endif
+
+# If running on a reasonably fast architecture, use GLIDE64, which is slower
+# but more accurate than GLN64
+ifeq ($(ARCH), $(filter $(ARCH), i386 i686 x86_64 x64 aarch64))
+	GFX_FAST ?= 0
+else
+	GFX_FAST ?= 1
+endif
+
+ifeq ($(GFX_FAST), 0)
+	HAVE_GLN64=0
+	HAVE_GLIDE64=1
+else
+	HAVE_GLN64=1
+	HAVE_GLIDE64=0
 endif
 
 # Target Dynarec
@@ -104,6 +118,12 @@ help:
 	@echo "Available options and their descriptions when enabled:"
 	@echo "  DEBUG=$(DEBUG)"
 	@echo "          Enables all asserts and reduces optimisation."
+	@echo "  GFX_FAST=$(GFX_FAST)"
+	@echo "          Selects either a fast or accuracte graphics plugin."
+	@echo "          If not set, a setting will be automatically selected based upon the"
+	@echo "          target architecture."
+	@echo
+	@echo "Advanced options:"
 	@echo "  WITH_DYNAREC=$(WITH_DYNAREC)"
 	@echo "  WITH_LIBCO=$(WITH_LIBCO)"
 	@echo
