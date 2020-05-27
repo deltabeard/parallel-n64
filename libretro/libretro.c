@@ -29,10 +29,6 @@
 #include "plugin/audio_libretro/audio_plugin.h"
 #include "../Graphics/plugin.h"
 
-#ifdef HAVE_THR_AL
-#include "../mupen64plus-video-angrylion/vdac.h"
-#endif
-
 #ifndef PRESCALE_WIDTH
 #define PRESCALE_WIDTH  640
 #endif
@@ -47,18 +43,8 @@
 
 /* forward declarations */
 int InitGfx(void);
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 int glide64InitGfx(void);
 void gles2n64_reset(void);
-#endif
-
-#if defined(HAVE_PARALLEL)
-#include "../mupen64plus-video-paraLLEl/parallel.h"
-
-static struct retro_hw_render_callback hw_render;
-static struct retro_hw_render_context_negotiation_interface_vulkan hw_context_negotiation;
-static const struct retro_hw_render_interface_vulkan *vulkan;
-#endif
 
 #define ISHEXDEC ((codeLine[cursor]>='0') && (codeLine[cursor]<='9')) || ((codeLine[cursor]>='a') && (codeLine[cursor]<='f')) || ((codeLine[cursor]>='A') && (codeLine[cursor]<='F'))
 
@@ -625,11 +611,11 @@ void retro_set_environment(retro_environment_t cb)
 
 void retro_get_system_info(struct retro_system_info *info)
 {
-   info->library_name = "ParaLLEl N64";
+   info->library_name = "Toplel N64";
 #ifndef GIT_VERSION
 #define GIT_VERSION ""
 #endif
-   info->library_version = "2.0-rc2" GIT_VERSION;
+   info->library_version = "0.1" GIT_VERSION;
    info->valid_extensions = "n64|v64|z64|bin|u1|ndd";
    info->need_fullpath = false;
    info->block_extract = false;
@@ -723,7 +709,8 @@ static bool retro_init_gl(void)
    if (!glsm_ctl(GLSM_CTL_STATE_CONTEXT_INIT, &params))
    {
       if (log_cb)
-         log_cb(RETRO_LOG_ERROR, "mupen64plus: libretro frontend doesn't have OpenGL support.\n");
+         log_cb(RETRO_LOG_ERROR, "OpenGL support is mandatory.\n");
+
       return false;
    }
 
