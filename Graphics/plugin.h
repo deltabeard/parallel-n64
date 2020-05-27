@@ -7,7 +7,11 @@ extern "C" {
 
 enum gfx_plugin_type
 {
+#if HAVE_GLIDE64
+   GFX_GLIDE64 = 0
+#else
    GFX_GLN64 = 0
+#endif
 };
 
 enum rsp_plugin_type

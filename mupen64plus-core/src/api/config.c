@@ -37,14 +37,6 @@
 
 #include "main/util.h"
 
-/* TODO/FIXME - put this in some header */
-
-#define GFX_GLIDE64     0
-#define GFX_RICE        1
-#define GFX_GLN64       2
-#define GFX_ANGRYLION   3
-#define GFX_PARALLEL    4
-
 /* local types */
 #define MUPEN64PLUS_CFG_NAME "mupen64plus.cfg"
 

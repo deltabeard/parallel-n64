@@ -1,6 +1,8 @@
 DEBUG=0
 PERF_TEST=0
 HAVE_SHARED_CONTEXT=0
+HAVE_GLN64=0
+HAVE_GLIDE64=1
 
 GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
 ifneq ($(GIT_VERSION)," unknown")

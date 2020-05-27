@@ -16,7 +16,22 @@
 void GDPSetScissorC(uint32_t mode,
       float ulx, float uly, float lrx, float lry )
 {
-	gln64gDPSetScissor(mode, ulx, uly, lrx, lry);
+	/* FIXME: Remove switch and replace with ifdefs. */
+   switch (gfx_plugin)
+   {
+#if defined(HAVE_GLIDE64)
+      case GFX_GLIDE64:
+         glide64gDPSetScissor(mode, ulx, uly, lrx, lry);
+         break;
+#endif
+#if defined(HAVE_GLN64)
+      case GFX_GLN64:
+         gln64gDPSetScissor(mode, ulx, uly, lrx, lry);
+         break;
+#endif
+      default:
+	 break;
+   }
 }
 
 /*
@@ -34,5 +49,19 @@ void GDPSetScissorC(uint32_t mode,
 void GDPLoadBlockC(uint32_t tile, uint32_t ul_s, uint32_t ul_t,
       uint32_t lr_s, uint32_t dxt )
 {
-	gln64gDPLoadBlock(tile, ul_s, ul_t, lr_s, dxt);
+   switch (gfx_plugin)
+   {
+#ifdef HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gDPLoadBlock(tile, ul_s, ul_t, lr_s, dxt);
+         break;
+#endif
+#if defined(HAVE_GLN64)
+      case GFX_GLN64:
+         gln64gDPLoadBlock(tile, ul_s, ul_t, lr_s, dxt);
+         break;
+#endif
+      default:
+	 break;
+   }
 }

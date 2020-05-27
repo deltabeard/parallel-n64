@@ -3,17 +3,53 @@
 
 void GSPCombineMatrices(void)
 {
-	gln64gSPCombineMatrices();
+   switch (gfx_plugin)
+   {
+#if HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPCombineMatrices();
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPCombineMatrices();
+         break;
+#endif
+   }
 }
 
 void GSPDlistCount(uint32_t count, uint32_t v)
 {
-	gln64gSPDlistCount(count, v);
+   switch (gfx_plugin)
+   {
+#if HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPDlistCount(count, v);
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPDlistCount(count, v);
+         break;
+#endif
+   }
 }
 
 void GSPClipVertex(uint32_t v)
 {
-	gln64gSPClipVertex(v);
+   switch (gfx_plugin)
+   {
+#ifdef HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPClipVertex(v);
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPClipVertex(v);
+         break;
+#endif
+   }
 }
 
 /* Loads a LookAt structure in the RSP for specular highlighting
@@ -23,7 +59,19 @@ void GSPClipVertex(uint32_t v)
  */
 void GSPLookAt(uint32_t l, uint32_t n)
 {
-	gln64gSPLookAt(l, n);
+   switch (gfx_plugin)
+   {
+#ifdef HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPLookAt(l, n);
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPLookAt(l, n);
+         break;
+#endif
+   }
 }
 
 /* Loads one light structure to the RSP.
@@ -33,7 +81,19 @@ void GSPLookAt(uint32_t l, uint32_t n)
  */
 void GSPLight(uint32_t l, int32_t n)
 {
-	gln64gSPLight(l, n);
+   switch (gfx_plugin)
+   {
+#if HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPLight(l, n);
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPLight(l, n);
+         break;
+#endif
+   }
 }
 
 /* Quickly changes the light color in the RSP.
@@ -50,7 +110,19 @@ void GSPLight(uint32_t l, int32_t n)
 
 void GSPLightColor(uint32_t lightNum, uint32_t packedColor )
 {
-	gln64gSPLightColor(lightNum, packedColor);
+   switch (gfx_plugin)
+   {
+#if HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPLightColor(lightNum, packedColor);
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPLightColor(lightNum, packedColor);
+         break;
+#endif
+   }
 }
 
 /* Loads the viewport projection parameters.
@@ -60,12 +132,36 @@ void GSPLightColor(uint32_t lightNum, uint32_t packedColor )
  * */
 void GSPViewport(uint32_t v)
 {
-	gln64gSPViewport(v);
+   switch (gfx_plugin)
+   {
+#if HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPViewport(v);
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPViewport(v);
+         break;
+#endif
+   }
 }
 
 void GSPForceMatrix(uint32_t mptr)
 {
-	gln64gSPForceMatrix(mptr);
+   switch (gfx_plugin)
+   {
+#if HAVE_GLIDE64
+      case GFX_GLIDE64:
+         glide64gSPForceMatrix(mptr);
+         break;
+#endif
+#if HAVE_GLN64
+      case GFX_GLN64:
+         gln64gSPForceMatrix(mptr);
+         break;
+#endif
+   }
 }
 
 extern "C" void GSPEndDisplayListC(void);

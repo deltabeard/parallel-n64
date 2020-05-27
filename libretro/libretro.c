@@ -177,7 +177,8 @@ static void core_settings_set_defaults(void)
    struct retro_variable rsp_var = { "parallel-n64-rspplugin", 0 };
    environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &gfx_var);
    environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &rsp_var);
-   gfx_plugin = GFX_GLN64;
+   //gfx_plugin = GFX_GLN64;
+   gfx_plugin = GFX_GLIDE64;
 
    gfx_var.key = "parallel-n64-gfxplugin-accuracy";
    gfx_var.value = NULL;
@@ -530,7 +531,21 @@ void reinit_gfx_plugin(void)
 #endif
     }
 
-    gles2n64_reset();
+
+    switch (gfx_plugin)
+    {
+#if HAVE_GLIDE64
+       case GFX_GLIDE64:
+          glide64InitGfx();
+          break;
+#elif HAVE_GLN64
+       case GFX_GLN64:
+          gles2n64_reset();
+          break;
+#else
+#error "At least one graphics plugin must be enabled"
+#endif
+    }
 }
 
 #ifdef NO_LIBCO
@@ -784,11 +799,15 @@ extern void  angrylion_set_vi_dedither(unsigned value);
 extern void  angrylion_set_vi_blur(unsigned value);
 
 extern void angrylion_set_synclevel(unsigned value);
+extern void ChangeSize();
 
 static void gfx_set_filtering(void)
 {
      if (log_cb)
         log_cb(RETRO_LOG_DEBUG, "set filtering mode...\n");
+
+     if(gfx_plugin == GFX_GLIDE64)
+	     glide_set_filtering(retro_filtering);
 }
 
 unsigned setting_get_dithering(void)
@@ -1383,6 +1402,8 @@ void retro_run (void)
          if (aspect_val != last_aspect)
          {
             screen_aspectmodehint = aspectmode;
+	    if(gfx_plugin == GFX_GLIDE64)
+		    ChangeSize();
             last_aspect = aspect_val;
             reinit_screen = true;
          }
@@ -1607,13 +1628,15 @@ int retro_stop_stepping(void)
 #endif
 }
 
+extern void vbo_disable(void);
+
 int retro_return(bool just_flipping)
 {
    if (stop)
       return 0;
 
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#endif
+   if(gfx_plugin == GFX_GLIDE64)
+	   vbo_disable();
 
 #ifdef NO_LIBCO
    if (just_flipping)

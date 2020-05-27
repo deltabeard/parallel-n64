@@ -4,6 +4,7 @@ LIBRETRO_COMM_DIR  = $(ROOT_DIR)/libretro-common
 LIBRETRO_DIR       = $(ROOT_DIR)/libretro
 AUDIO_LIBRETRO_DIR = $(CORE_DIR)/src/plugin/audio_libretro
 VIDEODIR_GLN64     = $(ROOT_DIR)/gles2n64/src
+VIDEODIR_GLIDE     = $(ROOT_DIR)/glide2gl/src
 
 CFLAGS += \
 	-I$(CORE_DIR)/src \
@@ -11,7 +12,8 @@ CFLAGS += \
 	-I$(ROOT_DIR)/include \
 	-I$(AUDIO_LIBRETRO_DIR) \
 	-I$(LIBRETRO_COMM_DIR)/include \
-	-I$(LIBRETRO_DIR)
+	-I$(LIBRETRO_DIR) \
+	-I$(VIDEODIR_GLIDE)/Glitch64/inc
 
 SOURCES_C += $(RSPDIR)/src/alist.c \
     $(RSPDIR)/src/alist_audio.c \
@@ -169,6 +171,7 @@ SOURCES_C += $(LIBRETRO_COMM_DIR)/streams/file_stream.c \
 SOURCES_C += $(LIBRETRO_COMM_DIR)/gfx/gl_capabilities.c
 SOURCES_C += $(LIBRETRO_DIR)/brumme_crc.c
 
+ifeq ($(HAVE_GLN64),1)
 CFLAGS   += -DHAVE_GLN64
 
 SOURCES_C += $(VIDEODIR_GLN64)/3DMath.c \
@@ -203,6 +206,30 @@ SOURCES_C += $(VIDEODIR_GLN64)/3DMath.c \
 	     $(VIDEODIR_GLN64)/Turbo3D.c \
 	     $(VIDEODIR_GLN64)/ZSort.c \
 	     $(VIDEODIR_GLN64)/VI.c
+endif
+
+ifeq ($(HAVE_GLIDE64),1)
+CFLAGS   += -DHAVE_GLIDE64
+SOURCES_C += $(VIDEODIR_GLIDE)/Glide64/glide64_3dmath.c \
+	     $(VIDEODIR_GLIDE)/Glide64/Framebuffer_glide64.c \
+	     $(VIDEODIR_GLIDE)/Glide64/Glide64_Ini.c \
+	     $(VIDEODIR_GLIDE)/Glide64/glidemain.c \
+	     $(VIDEODIR_GLIDE)/Glide64/glide64_util.c \
+	     $(VIDEODIR_GLIDE)/Glide64/Glide64_UCode.c \
+	     $(VIDEODIR_GLIDE)/Glide64/glide64_gSP.c \
+	     $(VIDEODIR_GLIDE)/Glide64/glide64_gDP.c \
+	     $(VIDEODIR_GLIDE)/Glide64/Combine.c \
+	     $(VIDEODIR_GLIDE)/Glide64/TexCache.c \
+	     $(VIDEODIR_GLIDE)/Glide64/MiClWr.c \
+	     $(VIDEODIR_GLIDE)/Glide64/TexLoad.c \
+	     $(VIDEODIR_GLIDE)/Glide64/glide64_rdp.c
+
+# Glitch64
+SOURCES_C   += $(VIDEODIR_GLIDE)/Glitch64/glitch64_combiner.c \
+	       $(VIDEODIR_GLIDE)/Glitch64/geometry.c \
+	       $(VIDEODIR_GLIDE)/Glitch64/glitchmain.c \
+	       $(VIDEODIR_GLIDE)/Glitch64/glitch64_textures.c
+endif
 
 ifeq ($(HAVE_NEON),1)
 	SOURCES_ASM += $(LIBRETRO_COMM_DIR)/audio/conversion/float_to_s16_neon.S \

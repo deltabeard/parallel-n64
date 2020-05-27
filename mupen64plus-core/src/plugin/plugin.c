@@ -266,7 +266,11 @@ static m64p_error plugin_start_rsp(void)
 /* global functions */
 void plugin_connect_all(enum gfx_plugin_type gfx_plugin, enum rsp_plugin_type rsp_plugin)
 {
+#if HAVE_GLIDE64
+	gfx = gfx_glide64;
+#else
 	gfx = gfx_gln64;
+#endif
          rsp = rsp_hle;
 
    plugin_start_gfx();
