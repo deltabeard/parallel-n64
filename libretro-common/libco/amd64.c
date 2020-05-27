@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#if defined(__GNUC__) && !defined(_WIN32) && !defined(__cplusplus)
+#if defined(__GNUC__) && !defined(_WIN32) && !defined(__cplusplus) && !defined(CO_NO_INLINE_ASM)
 #define CO_USE_INLINE_ASM
 #endif
 

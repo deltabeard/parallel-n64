@@ -4,9 +4,6 @@ LIBRETRO_COMM_DIR  = $(ROOT_DIR)/libretro-common
 LIBRETRO_DIR       = $(ROOT_DIR)/libretro
 AUDIO_LIBRETRO_DIR = $(CORE_DIR)/src/plugin/audio_libretro
 VIDEODIR_GLN64     = $(ROOT_DIR)/gles2n64/src
-VIDEODIR_GLIDE     = $(ROOT_DIR)/glide2gl/src
-
-CFLAGS += -I$(VIDEODIR_GLIDE)/Glitch64/inc
 
 CFLAGS += \
 	-I$(CORE_DIR)/src \
@@ -15,11 +12,6 @@ CFLAGS += \
 	-I$(AUDIO_LIBRETRO_DIR) \
 	-I$(LIBRETRO_COMM_DIR)/include \
 	-I$(LIBRETRO_DIR)
-
-# libco
-ifneq ($(platform), emscripten)
-SOURCES_C += $(LIBRETRO_COMM_DIR)/libco/libco.c
-endif
 
 SOURCES_C += $(RSPDIR)/src/alist.c \
     $(RSPDIR)/src/alist_audio.c \
@@ -105,8 +97,6 @@ ifeq ($(PLATFORM_EXT), win64)
 DYNAFLAGS += -DWIN64
 endif
 
-ifdef WITH_DYNAREC
-	DYNAFLAGS += -DDYNAREC
 ifeq ($(WITH_DYNAREC), arm)
 	DYNAFLAGS += -DNEW_DYNAREC=3
 else ifeq ($(WITH_DYNAREC), aarch64)
@@ -124,7 +114,6 @@ endif
 #else ifeq ($(WITH_DYNAREC), $(filter $(WITH_DYNAREC), i386 i686))
 #	SOURCES_ASM += $(CORE_DIR)/src/r4300/hacktarux_dynarec/dyna_start_nasm_x86.S
 #endif
-endif # WITH_DYNAREC
 
 ifeq ($(WITH_DYNAREC), arm)
 SOURCES_C += $(CORE_DIR)/src/r4300/new_dynarec/new_dynarec.c \
@@ -247,3 +236,9 @@ else
 endif
 
 SOURCES_C += $(LIBRETRO_COMM_DIR)/glsym/rglgen.c
+
+# libco
+ifneq ($(WITH_LIBCO),0)
+CFLAGS += -DCO_NO_INLINE_ASM # FIXME: Remove workaround. This fixes linking error with lto.
+SOURCES_C += $(LIBRETRO_COMM_DIR)/libco/libco.c
+endif

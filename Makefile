@@ -1,23 +1,27 @@
 DEBUG=0
 PERF_TEST=0
 HAVE_SHARED_CONTEXT=0
-WITH_CRC=brumme
-HAVE_PARALLEL_RSP=0
-HAVE_LTCG ?= 0
 
 GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
 ifneq ($(GIT_VERSION)," unknown")
 	COREFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
 endif
 
-TARGET := parallel_n64_libretro.so
+NAME   := parallel_n64_libretro
+TARGETS := $(NAME).so
 SHARED := -shared -Wl,--version-script=libretro/link.T
-LDLIBS := -lpthread -lGL
+LDLIBS := -lpthread -lGL -lm
 
 DYNAFLAGS :=
 COREFLAGS :=
-CPUFLAGS  := -O2 -g1 -Wall
-fpic = -fpic
+CPUFLAGS  := -g3 -Wall -fPIC -flto
+
+ifeq ($(DEBUG),1)
+	CPUFLAGS += -Og
+else
+	CPUFLAGS += -O2 -ffast-math
+	TARGETS += $(NAME).sym
+endif
 
 # Dirs
 ROOT_DIR := .
@@ -28,15 +32,27 @@ ifeq (,$(ARCH))
    ARCH = $(shell uname -m)
 endif
 
+# Dynarec requires libco to be enabled
+#WITH_LIBCO ?= 1 # FIXME: Currently segfaults when libco disabled.
+WITH_LIBCO := 1
+ifeq ($(WITH_LIBCO),0)
+	CFLAGS += -DNO_LIBCO
+	WITH_DYNAREC := 0
+endif
+
 # Target Dynarec
 WITH_DYNAREC ?= $(ARCH)
-
+ifneq ($(WITH_DYNAREC),0)
+	DYNAFLAGS += -DDYNAREC
 ifeq ($(ARCH), $(filter $(ARCH), i386 i686))
-   WITH_DYNAREC = x86
+	WITH_DYNAREC = x86
+else ifeq ($(ARCH), $(filter $(ARCH), x86_64 x64))
+	WITH_DYNAREC = x86_64
 else ifeq ($(ARCH), $(filter $(ARCH), arm))
-   WITH_DYNAREC = arm
+	WITH_DYNAREC = arm
 else ifeq ($(ARCH), $(filter $(ARCH), aarch64))
-   WITH_DYNAREC = aarch64
+	WITH_DYNAREC = aarch64
+endif
 endif
 
 include Makefile.common
@@ -61,25 +77,33 @@ else
 CFLAGS += -DINLINE="inline"
 endif
 
-# Fix for GCC 10, make sure its added to all stages of the compiler
-ifeq "$(shell expr `gcc -dumpversion` \>= 10)" "1"
-  CPUFLAGS += -fcommon
-endif
-
 ### Finalize ###
 OBJECTS     += $(SOURCES_CXX:.cpp=.o) $(SOURCES_C:.c=.o) $(SOURCES_ASM:.S=.o)
-CFLAGS      += $(COREFLAGS) $(fpic) $(CPUFLAGS) $(DYNAFLAGS)
+CFLAGS      += $(COREFLAGS) $(CPUFLAGS) $(DYNAFLAGS)
 CXXFLAGS    += $(CFLAGS)
-ASFLAGS     := $(ASFLAGS) $(CFLAGS) $(CPUFLAGS)
 
-all: $(TARGET)
-$(TARGET): $(OBJECTS)
-	$(CC) $(SHARED) $(CFLAGS) $(LDLIBS) -o $@ $^ 
+all: $(TARGETS)
+$(NAME).so: $(OBJECTS)
+	$(CC) $(SHARED) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+$(NAME).sym: $(NAME).so
+	strip --only-keep-debug -o $@ $<
+	strip -s $<
+	@chmod -x $@
 
 %.o: %.S
 	nasm -f elf64 $< -o$@
 
 clean:
-	$(RM) $(OBJECTS) $(TARGET)
+	$(RM) $(OBJECTS) $(TARGETS)
+
+# 80char      |-------------------------------------------------------------------------------|
+help:
+	@echo "Available options and their descriptions when enabled:"
+	@echo "  DEBUG=$(DEBUG)"
+	@echo "          Enables all asserts and reduces optimisation."
+	@echo "  WITH_DYNAREC=$(WITH_DYNAREC)"
+	@echo "  WITH_LIBCO=$(WITH_LIBCO)"
+	@echo
 
 .PHONY: clean
