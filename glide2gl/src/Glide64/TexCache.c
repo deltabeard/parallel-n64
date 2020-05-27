@@ -1307,7 +1307,7 @@ static void LoadTex(int id, int tmu)
             while (size--)
             {
                uint32_t col = *src++;
-               *dst++ = ((col & 0xF0) << 8 >> 12) | (uint8_t)(col & 0xF0) | (16 * (uint8_t)(col & 0xF0) & 0xFFFFFFF) | ((uint8_t)(col & 0xF0) << 8) | (16 * (uint16_t)(col & 0xF000) & 0xFFFFF) | (((uint16_t)(col & 0xF000) << 8) & 0xFFFFFF) | (((uint16_t)(col & 0xF000) << 12) & 0xFFFFFFF) | ((uint16_t)(col & 0xF000) << 16);
+               *dst++ = ((col & 0xF0) << 8 >> 12) | (uint8_t)(col & 0xF0) | (16 * (uint8_t)(col & 0xF0) & 0xFFFFFFF) | ((uint8_t)(col & 0xF0) << 8) | (16 * (uint16_t)(col & 0xF000) & 0xFFFFF) | (((uint16_t)(col & 0xF000) << 8) & 0xFFFFFF) | (((uint16_t)(col & 0xF000) << 12) & 0xFFFFFFF);
                *dst++ = ((col & 0xF00000) >> 20) | ((col & 0xF00000) >> 16) | ((col & 0xF00000) >> 12) | ((col & 0xF00000) >> 8) | ((col & 0xF0000000) >> 12) | ((col & 0xF0000000) >> 8) | ((col & 0xF0000000) >> 4) | (col & 0xF0000000);
             }
 
