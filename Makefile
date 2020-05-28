@@ -10,7 +10,8 @@ endif
 NAME   := parallel_n64_libretro
 TARGETS := $(NAME).so
 SHARED := -shared -Wl,--version-script=libretro/link.T
-LDLIBS := -lpthread -lGL -lm
+LDLIBS := -lpthread -lm
+# FIXME: -lopengl32 is required for build, but shouldn't getprocaddress handle this?
 
 DYNAFLAGS :=
 COREFLAGS :=
