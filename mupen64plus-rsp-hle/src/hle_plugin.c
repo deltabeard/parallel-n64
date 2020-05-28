@@ -26,6 +26,7 @@
 
 #include "common.h"
 #include "hle.h"
+#include "callbacks.h"
 
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "m64p_types.h"
@@ -37,16 +38,7 @@
 
 /* local variables */
 static struct hle_t g_hle;
-
 static unsigned l_PluginInit = 0;
-
-/* local function */
-static void DebugMessage(int level, const char *message, va_list args)
-{
-    char msgbuf[1024];
-
-    vsprintf(msgbuf, message, args);
-}
 
 /* Global functions needed by HLE core */
 void HleVerboseMessage(void* UNUSED(user_defined), const char *message, ...)
