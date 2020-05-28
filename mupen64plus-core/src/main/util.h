@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 #include <string.h>
+#include <stdint.h>
 
 #include <retro_inline.h>
 
@@ -44,20 +45,24 @@ extern "C" {
 #define BUILTIN_BSWAP64 _byteswap_uint64
 #endif
 
-static INLINE unsigned short m64p_swap16(unsigned short x)
+static INLINE uint16_t m64p_swap16(uint16_t x)
 {
 #ifdef BUILTIN_BSWAP16
    return BUILTIN_BSWAP16(x);
+#elif defined(__GNUC__)
+   return __builtin_bswap16(x);
 #else
    return ((x & 0x00FF) << 8) |
       ((x & 0xFF00) >> 8);
 #endif
 }
 
-static INLINE unsigned int m64p_swap32(unsigned int x)
+static INLINE uint32_t m64p_swap32(uint32_t x)
 {
 #ifdef BUILTIN_BSWAP32
    return BUILTIN_BSWAP32(x); // long is always 32-bit in Windows
+#elif defined(__GNUC__)
+   return __builtin_bswap32(x);
 #else
    return ((x & 0x000000FF) << 24) |
       ((x & 0x0000FF00) << 8) |
@@ -66,10 +71,12 @@ static INLINE unsigned int m64p_swap32(unsigned int x)
 #endif
 }
 
-static INLINE unsigned long long int m64p_swap64(unsigned long long int x)
+static INLINE uint64_t m64p_swap64(uint64_t x)
 {
 #ifdef BUILTIN_BSWAP64
    return BUILTIN_BSWAP64(x);
+#elif defined(__GNUC__)
+   return __builtin_bswap64(x);
 #else
    return ((x & 0x00000000000000FFULL) << 56) |
       ((x & 0x000000000000FF00ULL) << 40) |

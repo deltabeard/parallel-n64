@@ -20,10 +20,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include <boolean.h>
 
@@ -57,7 +57,7 @@ enum { DEFAULT_AUDIO_SIGNAL = 0 };
 /* Global loaded rom memory space. */
 unsigned char* g_rom = NULL;
 /* Global loaded rom size. */
-int g_rom_size = 0;
+size_t g_rom_size = 0;
 unsigned alternate_vi_timing = 0;
 int           g_vi_refresh_rate = DEFAULT_COUNT_PER_SCANLINE;
 
@@ -113,28 +113,30 @@ static int is_valid_rom(const unsigned char *buffer)
  * rom data to native .z64 before forwarding. Makes sure that data extraction
  * and MD5ing routines always deal with a .z64 image.
  */
-static void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength)
+static void swap_rom(unsigned char* localrom, unsigned char* imagetype,
+		size_t loadlength)
 {
-   unsigned char temp;
-   int i;
-
-   /* Btyeswap if .v64 image. */
-   if(localrom[0]==0x37)
+   /* Byteswap if .v64 image. */
+   if(localrom[0]==V64_SIGNATURE[0])
    {
+      size_t i;
       *imagetype = V64IMAGE;
       for (i = 0; i < loadlength; i+=2)
       {
+	 unsigned char temp;
          temp=localrom[i];
          localrom[i]=localrom[i+1];
          localrom[i+1]=temp;
       }
    }
    /* Wordswap if .n64 image. */
-   else if(localrom[0]==0x40)
+   else if(localrom[0]==N64_SIGNATURE[0])
    {
+      size_t i;
       *imagetype = N64IMAGE;
       for (i = 0; i < loadlength; i+=4)
       {
+	 unsigned char temp;
          temp=localrom[i];
          localrom[i]=localrom[i+3];
          localrom[i+3]=temp;
@@ -145,9 +147,16 @@ static void swap_rom(unsigned char* localrom, unsigned char* imagetype, int load
    }
    else
       *imagetype = Z64IMAGE;
+
+   if(*imagetype != Z64IMAGE)
+   {
+	 DebugMessage(M64MSG_INFO, "%s: consider using z64 images to avoid "
+		   "byte-swapping on load.", __func__);
+   }
+
 }
 
-m64p_error open_rom(const unsigned char* romimage, unsigned int size)
+m64p_error open_rom(const unsigned char *const romimage, size_t size)
 {
 #include "rom_luts.c"
    md5_state_t state;
@@ -192,7 +201,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
       sprintf(buffer+i*2, "%02X", digest[i]);
    buffer[32] = '\0';
    strcpy(ROM_SETTINGS.MD5, buffer);
-   
+
    ROM_SETTINGS.sidmaduration = 0x900;
 
    /* add some useful properties to ROM_PARAMS */

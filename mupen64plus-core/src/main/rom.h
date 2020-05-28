@@ -28,11 +28,11 @@
 
 /* ROM Loading and Saving functions */
 
-m64p_error open_rom(const unsigned char* romimage, unsigned int size);
+m64p_error open_rom(const unsigned char *const romimage, size_t size);
 m64p_error close_rom(void);
 
 extern unsigned char* g_rom;
-extern int g_rom_size;
+extern size_t g_rom_size;
 extern int g_vi_refresh_rate;
 extern unsigned char g_fixed_audio_pos;
 
@@ -50,7 +50,7 @@ extern rom_params        ROM_PARAMS;
 extern m64p_rom_settings ROM_SETTINGS;
 
 /* Supported rom image types. */
-enum 
+enum
 {
     Z64IMAGE,
     V64IMAGE,
