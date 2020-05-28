@@ -99,6 +99,6 @@ EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
     if ((unsigned)ReturnCode > (sizeof(ErrorMessages) / sizeof(char *)))
         return "ERROR: Invalid m64p_error code given to CoreErrorMessage()";
 
-    return ErrorMessages[i];
+    return ErrorMessages[ReturnCode];
 }
 
