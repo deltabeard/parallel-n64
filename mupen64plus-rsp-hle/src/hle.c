@@ -49,7 +49,7 @@
 /* helper functions prototypes */
 static unsigned int sum_bytes(const unsigned char *bytes, unsigned int size);
 static void rsp_break(struct hle_t* hle, unsigned int setbits);
-static void forward_gfx_task(struct hle_t* hle);
+static void forward_gfx_task(void);
 static bool try_fast_audio_dispatching(struct hle_t* hle);
 static bool try_fast_task_dispatching(struct hle_t* hle);
 static void normal_task_dispatching(struct hle_t* hle);
@@ -160,7 +160,7 @@ static void rsp_break(struct hle_t* hle, unsigned int setbits)
    }
 }
 
-static void forward_gfx_task(struct hle_t* hle)
+static void forward_gfx_task(void)
 {
    if (rsp_info.ProcessDlistList)
       rsp_info.ProcessDlistList();
@@ -287,7 +287,7 @@ static bool try_fast_task_dispatching(struct hle_t* hle)
 
           if (FORWARD_GFX)
           {
-             forward_gfx_task(hle);
+             forward_gfx_task();
              return true;
           }
           break;
@@ -330,7 +330,7 @@ static void normal_task_dispatching(struct hle_t* hle)
       case 0x212ee:
          if (FORWARD_GFX)
          {
-            forward_gfx_task(hle);
+            forward_gfx_task();
             return;
          }
          break;
