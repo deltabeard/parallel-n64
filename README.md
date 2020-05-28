@@ -1,3 +1,10 @@
+Mupen64plus-libretro-nx is significantly faster than Parallel-N64.
+
+* Mupen64plus-libretro-nx: 1344.65 FPS
+* Parallel-N64: 754.22 FPS
+
+This project will be archived.
+
 # Toplel-N64
 
 This is a fork of parallel-N64. The aim is to produce a small, OpenGL-only,
