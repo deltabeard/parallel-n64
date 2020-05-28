@@ -41,7 +41,7 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
 
     if (APIVersion != NULL)
         *APIVersion = FRONTEND_API_VERSION;
-    
+
     if (PluginNamePtr != NULL)
         *PluginNamePtr = MUPEN_CORE_NAME;
 
@@ -55,7 +55,7 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
         *Capabilities |= M64CAPS_DYNAREC;
 #endif
     }
-                    
+
     return M64ERR_SUCCESS;
 }
 
@@ -77,7 +77,7 @@ EXPORT m64p_error CALL CoreGetAPIVersions(int *ConfigVersion, int *DebugVersion,
     return M64ERR_SUCCESS;
 }
 
-static const char *ErrorMessages[] = {
+static const char *const ErrorMessages[] = {
                    "SUCCESS: No error",
                    "NOT_INIT: A function was called before it's associated module was initialized",
                    "ALREADY_INIT: Initialization function called twice",
@@ -96,9 +96,7 @@ static const char *ErrorMessages[] = {
 
 EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
 {
-    int i = (int) ReturnCode;
-
-    if (i < 0 || i > (sizeof(ErrorMessages) / sizeof(char *)))
+    if ((unsigned)ReturnCode > (sizeof(ErrorMessages) / sizeof(char *)))
         return "ERROR: Invalid m64p_error code given to CoreErrorMessage()";
 
     return ErrorMessages[i];
