@@ -48,8 +48,8 @@ static void swap(int16_t **a, int16_t **b)
     *a = tmp;
 }
 
-#define sample(hle, pos)      ((int16_t*)(hle)->alist_buffer + ((pos ^ S) & 0xfff))
-#define alist_u8(hle, dmem)   ((uint8_t*)((hle)->alist_buffer + ((dmem ^ S8) & 0xfff)))
+#define sample(hle, pos)      ((int16_t*)(hle)->alist_buffer + (((pos) ^ S) & 0xfff))
+#define alist_u8(hle, dmem)   ((uint8_t*)((hle)->alist_buffer + (((dmem) ^ S8) & 0xfff)))
 #define alist_s16(hle, dmem)  ((int16_t*)u16((hle)->alist_buffer, (dmem)))
 #define sample_mix(dst, src, gain)  (clamp_s16(*(dst) + (((src) * (gain)) >> 15)))
 
@@ -1004,7 +1004,7 @@ void alist_iirf(
          int32_t accu;
 
          ibuf[index&3] = *alist_s16(hle, dmemi);
-         accu = prev 
+         accu = prev
             + vmulf(table[0], ibuf[index&3])
             + vmulf(table[1], ibuf[(index-1)&3])
             + vmulf(table[0], ibuf[(index-2)&3]);
